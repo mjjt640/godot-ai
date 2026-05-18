@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="FireModeModuleData" load_steps=1 format=3]
+
+[ext_resource type="Script" path="res://resources/modules/fire_mode_module_data.gd" id="1_fire"]
+
+[resource]
+script = ExtResource("1_fire")
+id = &"spread_fire"
+display_name = "散射"
+description = "向扇形范围发射三枚子弹。"
+slot_type = &"fire_mode"
+stat_modifiers = {}
+behavior_flags = {}

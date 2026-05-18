@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="PayloadModuleData" load_steps=1 format=3]
+
+[ext_resource type="Script" path="res://resources/modules/payload_module_data.gd" id="1_payload"]
+
+[resource]
+script = ExtResource("1_payload")
+id = &"normal_payload"
+display_name = "普通弹头"
+description = "命中后造成基础伤害。"
+slot_type = &"payload"
+stat_modifiers = {}
+behavior_flags = {}

@@ -1,0 +1,35 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/game/run_manager.gd" id="1_run"]
+[ext_resource type="Script" path="res://scripts/build/build_state.gd" id="2_build"]
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="3_player"]
+[ext_resource type="Script" path="res://scripts/game/spawn_manager.gd" id="4_spawn"]
+[ext_resource type="Script" path="res://scripts/progression/xp_manager.gd" id="5_xp"]
+[ext_resource type="Script" path="res://scripts/progression/upgrade_manager.gd" id="6_upgrade"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="7_hud"]
+[ext_resource type="PackedScene" path="res://scenes/ui/level_up_panel.tscn" id="8_level_panel"]
+
+[node name="GameRoot" type="Node2D"]
+script = ExtResource("1_run")
+
+[node name="CanvasModulate" type="CanvasModulate" parent="."]
+color = Color(0.12, 0.14, 0.16, 1)
+
+[node name="BuildState" type="Node" parent="."]
+script = ExtResource("2_build")
+
+[node name="Player" parent="." instance=ExtResource("3_player")]
+position = Vector2(0, 0)
+
+[node name="SpawnManager" type="Node" parent="."]
+script = ExtResource("4_spawn")
+
+[node name="XPManager" type="Node" parent="."]
+script = ExtResource("5_xp")
+
+[node name="UpgradeManager" type="Node" parent="."]
+script = ExtResource("6_upgrade")
+
+[node name="HUD" parent="." instance=ExtResource("7_hud")]
+
+[node name="LevelUpPanel" parent="." instance=ExtResource("8_level_panel")]

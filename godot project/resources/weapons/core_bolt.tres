@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="BaseWeaponData" load_steps=1 format=3]
+
+[ext_resource type="Script" path="res://resources/weapons/base_weapon_data.gd" id="1_base"]
+
+[resource]
+script = ExtResource("1_base")
+id = &"core_bolt"
+display_name = "核心弹"
+description = "一把稳定的自动武器，用来验证不同模块组合。"
+damage = 10.0
+cooldown = 0.55
+projectile_speed = 520.0
+projectile_lifetime = 1.6
+projectile_size = 1.0

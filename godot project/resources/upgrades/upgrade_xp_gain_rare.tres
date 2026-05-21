@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="UpgradeOptionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/upgrades/upgrade_option_data.gd" id="1_upgrade"]
+
+[resource]
+script = ExtResource("1_upgrade")
+id = &"upgrade_xp_gain_rare"
+display_name = "经验增幅"
+description = "显著提高经验获取速度。"
+upgrade_type = 2
+rarity = 1
+weight = 1.0
+general_modifiers = {
+&"xp_gain_mult": 1.18
+}

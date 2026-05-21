@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="UpgradePoolData" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://resources/upgrades/upgrade_pool_data.gd" id="1_pool"]
+[ext_resource type="Resource" path="res://resources/upgrades/upgrade_burst_fire.tres" id="2_burst"]
+[ext_resource type="Resource" path="res://resources/upgrades/upgrade_spread_fire.tres" id="3_spread"]
+[ext_resource type="Resource" path="res://resources/upgrades/upgrade_piercing_round.tres" id="4_piercing"]
+[ext_resource type="Resource" path="res://resources/upgrades/upgrade_explosive_round.tres" id="5_explosive"]
+[ext_resource type="Resource" path="res://resources/upgrades/upgrade_quick_core.tres" id="6_quick"]
+
+[resource]
+script = ExtResource("1_pool")
+options = Array[Resource("res://resources/upgrades/upgrade_option_data.gd")]([ExtResource("2_burst"), ExtResource("3_spread"), ExtResource("4_piercing"), ExtResource("5_explosive"), ExtResource("6_quick")])
+option_count = 3
+prevent_same_slot_replacement = true
+max_module_count = 3
+common_rarity_weight = 1.0
+rare_rarity_weight = 0.45
+epic_rarity_weight = 0.18
+legendary_rarity_weight = 0.06
+luck_rare_weight_bonus = 0.3
+luck_epic_weight_bonus = 0.65
+luck_legendary_weight_bonus = 1.0

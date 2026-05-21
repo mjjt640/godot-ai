@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="UpgradeOptionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/upgrades/upgrade_option_data.gd" id="1_upgrade"]
+
+[resource]
+script = ExtResource("1_upgrade")
+id = &"upgrade_pierce_boost"
+display_name = "穿透强化"
+description = "子弹额外穿透 1 个敌人。"
+upgrade_type = 1
+rarity = 1
+weight = 1.0
+stat_modifiers = {
+&"pierce_count_add": 1
+}
+required_module_ids = Array[StringName]([&"piercing_round"])

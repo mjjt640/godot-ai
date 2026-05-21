@@ -12,3 +12,5 @@ cooldown = 0.55
 projectile_speed = 520.0
 projectile_lifetime = 1.6
 projectile_size = 1.0
+explosion_damage_mult = 0.55
+knockback_strength = 120.0

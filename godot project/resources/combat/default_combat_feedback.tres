@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="CombatFeedbackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/combat/combat_feedback_data.gd" id="1_feedback"]
+
+[resource]
+script = ExtResource("1_feedback")
+enemy_hit_scale = 1.12
+enemy_hit_duration = 0.1
+enemy_hit_color = Color(1, 0.35, 0.32, 1)
+enemy_death_scale = 1.35
+enemy_death_duration = 0.18
+enemy_death_color = Color(1, 0.72, 0.28, 1)
+damage_number_lifetime = 0.55
+damage_number_rise = 34.0
+damage_number_spread = 18.0
+damage_number_color = Color(1, 0.82, 0.32, 1)
+xp_drop_scatter_radius = 28.0
+xp_drop_scatter_duration = 0.18
+camera_shake_strength = 4.0
+camera_shake_duration = 0.12
+explosion_effect_duration = 0.18
+explosion_effect_ring_width = 5.0
+explosion_effect_ring_color = Color(1, 0.56, 0.18, 0.9)
+explosion_effect_fill_color = Color(1, 0.32, 0.12, 0.18)

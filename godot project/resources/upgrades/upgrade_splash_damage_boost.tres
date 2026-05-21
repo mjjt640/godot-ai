@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="UpgradeOptionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/upgrades/upgrade_option_data.gd" id="1_upgrade"]
+
+[resource]
+script = ExtResource("1_upgrade")
+id = &"upgrade_splash_damage_boost"
+display_name = "溅射伤害强化"
+description = "提高爆炸弹对附近敌人的溅射伤害。"
+upgrade_type = 1
+rarity = 3
+weight = 1.0
+stat_modifiers = {
+&"explosion_damage_mult_add": 0.1
+}
+required_module_ids = Array[StringName]([&"explosive_round"])

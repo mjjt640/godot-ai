@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="UpgradeOptionData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://resources/upgrades/upgrade_option_data.gd" id="1_upgrade"]
+[ext_resource type="Resource" path="res://resources/modules/fire_quick_single.tres" id="2_module"]
+
+[resource]
+script = ExtResource("1_upgrade")
+id = &"upgrade_quick_core"
+display_name = "安装急速核心"
+description = "将发射模式替换为更快的稳定单发。"
+upgrade_type = 0
+rarity = 1
+module = ExtResource("2_module")
+weight = 1.0
+stat_modifiers = {}
+required_module_ids = Array[StringName]([])

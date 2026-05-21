@@ -1,13 +1,15 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/player/player_controller.gd" id="1_player"]
 [ext_resource type="Script" path="res://scripts/combat/weapon_controller.gd" id="2_weapon"]
+[ext_resource type="Resource" path="res://resources/characters/character_core_runner.tres" id="3_character"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_player"]
 radius = 18.0
 
 [node name="Player" type="CharacterBody2D"]
 script = ExtResource("1_player")
+character_data = ExtResource("3_character")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_player")

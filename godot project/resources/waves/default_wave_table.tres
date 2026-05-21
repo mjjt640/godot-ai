@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="WaveTableData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://resources/waves/wave_table_data.gd" id="1_table"]
+[ext_resource type="Resource" path="res://resources/waves/early_wave.tres" id="2_early"]
+[ext_resource type="Resource" path="res://resources/waves/mid_wave.tres" id="3_mid"]
+[ext_resource type="Resource" path="res://resources/waves/late_wave.tres" id="4_late"]
+[ext_resource type="Resource" path="res://resources/waves/final_pressure_wave.tres" id="5_final"]
+
+[resource]
+script = ExtResource("1_table")
+entries = Array[Resource("res://resources/waves/wave_entry_data.gd")]([ExtResource("2_early"), ExtResource("3_mid"), ExtResource("4_late"), ExtResource("5_final")])

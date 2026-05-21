@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="FireModeModuleData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/modules/fire_mode_module_data.gd" id="1_fire"]
+
+[resource]
+script = ExtResource("1_fire")
+id = &"quick_single"
+display_name = "急速单发"
+description = "保持单发形态，但显著缩短发射间隔。"
+slot_type = &"fire_mode"
+rarity = 1
+damage_mult = 0.86
+cooldown_mult = 0.72
+projectile_count = 1
+angles = [0.0]
+burst_count = 1
+burst_interval = 0.08
+stat_modifiers = {}
+behavior_flags = {}

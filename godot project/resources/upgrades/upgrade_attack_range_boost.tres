@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="UpgradeOptionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/upgrades/upgrade_option_data.gd" id="1_upgrade"]
+
+[resource]
+script = ExtResource("1_upgrade")
+id = &"upgrade_attack_range_boost"
+display_name = "射程校准"
+description = "提高当前弹头构筑的锁敌范围。"
+upgrade_type = 1
+rarity = 0
+weight = 1.0
+stat_modifiers = {
+&"attack_range_add": 110.0
+}
+required_module_ids = Array[StringName]([&"normal_payload", &"piercing_round", &"explosive_round"])

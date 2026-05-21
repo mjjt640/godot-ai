@@ -1,10 +1,24 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/game/enemy_controller.gd" id="1_enemy"]
 [ext_resource type="Resource" path="res://resources/enemies/enemy_basic.tres" id="2_data"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_enemy"]
 radius = 16.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_enemy_health_bg"]
+bg_color = Color(0.12, 0.03, 0.04, 0.86)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_enemy_health_fill"]
+bg_color = Color(0.95, 0.18, 0.14, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
 
 [node name="EnemyBasic" type="CharacterBody2D"]
 script = ExtResource("1_enemy")
@@ -16,3 +30,16 @@ shape = SubResource("CircleShape2D_enemy")
 [node name="Visual" type="Polygon2D" parent="."]
 color = Color(0.84, 0.25, 0.2, 1)
 polygon = PackedVector2Array(0, -17, 16, 0, 0, 17, -16, 0)
+
+[node name="HealthBar" type="ProgressBar" parent="."]
+visible = false
+offset_left = -22.0
+offset_top = -31.0
+offset_right = 22.0
+offset_bottom = -25.0
+mouse_filter = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_enemy_health_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_enemy_health_fill")
+max_value = 20.0
+value = 20.0
+show_percentage = false

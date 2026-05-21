@@ -1,6 +1,20 @@
-[gd_scene load_steps=1 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/hud_controller.gd" id="1_hud"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_health_bg"]
+bg_color = Color(0.13, 0.05, 0.06, 0.9)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_health_fill"]
+bg_color = Color(0.88, 0.12, 0.16, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
 
 [node name="HUD" type="CanvasLayer"]
 script = ExtResource("1_hud")
@@ -18,9 +32,9 @@ layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -380.0
+offset_left = -420.0
 offset_top = 14.0
-offset_right = 380.0
+offset_right = 420.0
 offset_bottom = 96.0
 grow_horizontal = 2
 theme_override_constants/margin_left = 14
@@ -49,6 +63,31 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "等级 1"
 
+[node name="CharacterLabel" type="Label" parent="Root/MarginContainer/Panel/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "角色：核心行者"
+
+[node name="HealthBox" type="VBoxContainer" parent="Root/MarginContainer/Panel/HBoxContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(170, 0)
+theme_override_constants/separation = 4
+
+[node name="HealthLabel" type="Label" parent="Root/MarginContainer/Panel/HBoxContainer/HealthBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "生命 100 / 100"
+
+[node name="HealthBar" type="ProgressBar" parent="Root/MarginContainer/Panel/HBoxContainer/HealthBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(170, 10)
+theme_override_styles/background = SubResource("StyleBoxFlat_health_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_health_fill")
+max_value = 100.0
+value = 100.0
+show_percentage = false
+
 [node name="XpLabel" type="Label" parent="Root/MarginContainer/Panel/HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
@@ -63,3 +102,35 @@ text = "发射：单发"
 unique_name_in_owner = true
 layout_mode = 2
 text = "弹头：普通弹头"
+
+[node name="GameOverPanel" type="PanelContainer" parent="Root"]
+unique_name_in_owner = true
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -160.0
+offset_top = -70.0
+offset_right = 160.0
+offset_bottom = 70.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="Root/GameOverPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 16
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Root/GameOverPanel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="GameOverLabel" type="Label" parent="Root/GameOverPanel/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "游戏结束"
+horizontal_alignment = 1

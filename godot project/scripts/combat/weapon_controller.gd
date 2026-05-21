@@ -17,11 +17,11 @@ func _physics_process(delta: float) -> void:
 	if _cooldown_remaining > 0.0:
 		return
 
-	var target := _find_nearest_enemy()
+	var profile := _build_state.get_current_shot_profile()
+	var target := _find_nearest_enemy(profile.attack_range)
 	if target == null:
 		return
 
-	var profile := _build_state.get_current_shot_profile()
 	_cooldown_remaining = profile.cooldown
 	_fire_profile(profile, target.global_position)
 
@@ -55,14 +55,17 @@ func _spawn_projectile_group(profile: ShotProfile, target_position: Vector2) -> 
 		projectile.configure(profile, base_direction.rotated(deg_to_rad(angle_offset)))
 
 
-func _find_nearest_enemy() -> Node2D:
+func _find_nearest_enemy(attack_range: float) -> Node2D:
 	var nearest: Node2D
 	var nearest_distance := INF
+	var max_distance := attack_range * attack_range if attack_range > 0.0 else INF
 	for enemy in get_tree().get_nodes_in_group("enemies"):
 		if not enemy is Node2D:
 			continue
 
 		var distance := global_position.distance_squared_to(enemy.global_position)
+		if distance > max_distance:
+			continue
 		if distance < nearest_distance:
 			nearest = enemy
 			nearest_distance = distance

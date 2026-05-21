@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="UpgradeOptionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/upgrades/upgrade_option_data.gd" id="1_upgrade"]
+
+[resource]
+script = ExtResource("1_upgrade")
+id = &"upgrade_luck_boost"
+display_name = "战术预判"
+description = "提高高品质模块技能的刷新概率。"
+upgrade_type = 1
+rarity = 1
+weight = 1.0
+stat_modifiers = {
+&"luck_add": 0.15
+}
+required_module_ids = Array[StringName]([&"single_shot", &"normal_payload", &"quick_single", &"burst_fire", &"spread_fire", &"piercing_round", &"explosive_round"])

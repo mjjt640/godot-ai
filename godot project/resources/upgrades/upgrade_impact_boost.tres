@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="UpgradeOptionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/upgrades/upgrade_option_data.gd" id="1_upgrade"]
+
+[resource]
+script = ExtResource("1_upgrade")
+id = &"upgrade_impact_boost"
+display_name = "冲击强化"
+description = "提高子弹击退力度。"
+upgrade_type = 1
+rarity = 0
+weight = 1.0
+stat_modifiers = {
+&"knockback_add": 35.0
+}
+required_module_ids = Array[StringName]([&"normal_payload", &"piercing_round", &"explosive_round"])

@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="CharacterData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://resources/characters/character_data.gd" id="1_character"]
+[ext_resource type="Resource" path="res://resources/modules/fire_single_shot.tres" id="2_fire"]
+[ext_resource type="Resource" path="res://resources/modules/payload_normal.tres" id="3_payload"]
+
+[resource]
+script = ExtResource("1_character")
+id = &"character_template"
+display_name = "角色模板"
+description = "复制此资源创建新角色，并调整移动、生命、经验吸附、幸运、攻击和初始模块。"
+move_speed = 260.0
+max_health = 100.0
+xp_magnet_radius = 150.0
+luck = 0.0
+attack_speed = 1.0
+attack_range = 780.0
+crit_chance = 0.05
+crit_damage_mult = 1.5
+starting_fire_module = ExtResource("2_fire")
+starting_payload_module = ExtResource("3_payload")

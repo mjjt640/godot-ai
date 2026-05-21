@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="ObstacleData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/environment/obstacle_data.gd" id="1_obstacle"]
+
+[resource]
+script = ExtResource("1_obstacle")
+position = Vector2(540, 260)
+size = Vector2(210, 90)
+color = Color(0.42, 0.39, 0.31, 1)

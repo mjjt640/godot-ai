@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="UpgradeOptionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/upgrades/upgrade_option_data.gd" id="1_upgrade"]
+
+[resource]
+script = ExtResource("1_upgrade")
+id = &"upgrade_health_recovery_rare"
+display_name = "应急修复"
+description = "立刻恢复较多生命。"
+upgrade_type = 2
+rarity = 1
+weight = 1.0
+general_modifiers = {
+&"heal_add": 45.0
+}

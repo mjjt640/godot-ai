@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ArenaVisualData" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://resources/environment/arena_visual_data.gd" id="1_visual"]
+[ext_resource type="Resource" path="res://resources/environment/obstacle_left_ruin.tres" id="2_left"]
+[ext_resource type="Resource" path="res://resources/environment/obstacle_right_ruin.tres" id="3_right"]
+[ext_resource type="Resource" path="res://resources/environment/obstacle_top_stone.tres" id="4_top"]
+[ext_resource type="Resource" path="res://resources/environment/hazard_center_burn.tres" id="5_center_hazard"]
+[ext_resource type="Resource" path="res://resources/environment/hazard_north_burn.tres" id="6_north_hazard"]
+
+[resource]
+script = ExtResource("1_visual")
+arena_color = Color(0.18, 0.22, 0.2, 1)
+grid_color = Color(0.3, 0.38, 0.34, 0.55)
+boundary_color = Color(0.74, 0.93, 0.75, 0.68)
+grid_size = 120.0
+boundary_line_width = 5.0
+obstacles = Array[Resource("res://resources/environment/obstacle_data.gd")]([ExtResource("2_left"), ExtResource("3_right"), ExtResource("4_top")])
+hazards = Array[Resource("res://resources/environment/hazard_data.gd")]([ExtResource("5_center_hazard"), ExtResource("6_north_hazard")])

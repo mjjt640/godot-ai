@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="HazardData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/environment/hazard_data.gd" id="1_hazard"]
+
+[resource]
+script = ExtResource("1_hazard")
+position = Vector2(-260, -360)
+size = Vector2(220, 110)
+color = Color(0.94, 0.42, 0.12, 0.34)
+damage = 6.0
+trigger_interval = 1.25

@@ -1,14 +1,16 @@
-[gd_resource type="Resource" script_class="WaveEntryData" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="WaveEntryData" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://resources/waves/wave_entry_data.gd" id="1_wave"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/enemy_basic.tscn" id="2_basic"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/enemy_fast.tscn" id="3_fast"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/enemy_tank.tscn" id="4_tank"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/enemy_ranged.tscn" id="5_ranged"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/enemy_shield.tscn" id="6_shield"]
 
 [resource]
 script = ExtResource("1_wave")
-start_time = 155.0
-spawn_interval = 0.44
+start_time = 145.0
+spawn_interval = 0.42
 spawn_batch_size = 5
-max_alive_enemies = 40
-enemy_scenes = Array[PackedScene]([ExtResource("2_basic"), ExtResource("3_fast"), ExtResource("3_fast"), ExtResource("4_tank"), ExtResource("4_tank")])
+max_alive_enemies = 44
+enemy_scenes = Array[PackedScene]([ExtResource("2_basic"), ExtResource("3_fast"), ExtResource("3_fast"), ExtResource("4_tank"), ExtResource("4_tank"), ExtResource("5_ranged"), ExtResource("6_shield")])

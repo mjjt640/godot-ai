@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="UpgradeOptionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/upgrades/upgrade_option_data.gd" id="1_upgrade"]
+
+[resource]
+script = ExtResource("1_upgrade")
+id = &"upgrade_blast_aftershock"
+display_name = "爆裂余波"
+description = "爆炸弹头获得更强溅射伤害。"
+upgrade_type = 1
+rarity = 3
+weight = 0.65
+stat_modifiers = {
+&"explosion_damage_mult_add": 0.18
+}
+required_module_ids = Array[StringName]([&"explosive_payload"])

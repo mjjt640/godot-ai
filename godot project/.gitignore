@@ -2,3 +2,7 @@
 .godot/
 /android/
 *.tmp
+
+# Locally installed editor plugins that are not part of the committed gameplay build.
+/addons/phantom_camera/
+/addons/scatter2d/

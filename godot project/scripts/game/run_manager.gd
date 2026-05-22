@@ -37,6 +37,8 @@ func _physics_process(delta: float) -> void:
 		return
 
 	_run_time += delta
+	if _hud != null:
+		_hud.update_run_status(_run_time, run_objective)
 	_update_objective_events()
 
 
@@ -60,6 +62,7 @@ func _ready() -> void:
 		_build_state.configure_from_character(_player.character_data)
 	if _hud != null:
 		_hud.bind(_build_state, _xp_manager, _player)
+		_hud.update_run_status(_run_time, run_objective)
 
 
 func _on_enemy_spawned(enemy: EnemyController) -> void:
@@ -127,6 +130,8 @@ func _spawn_objective_event(event: Resource) -> void:
 	for _index in range(spawn_count):
 		var enemy := _spawn_manager.spawn_enemy_scene(enemy_scene)
 		if enemy != null:
+			if enemy.enemy_data != null and enemy.enemy_data.get_is_boss() and _hud != null:
+				_hud.track_boss(enemy)
 			enemy.died.connect(func(_experience_reward: int, _death_position: Vector2) -> void: _on_objective_enemy_died(enemy))
 
 

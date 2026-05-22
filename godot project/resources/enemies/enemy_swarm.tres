@@ -5,16 +5,18 @@
 
 [resource]
 script = ExtResource("1_enemy")
-id = &"enemy_basic"
-display_name = "普通敌人"
+id = &"enemy_swarm"
+display_name = "蜂群敌人"
 template = ExtResource("2_template")
-max_health = 20.0
-move_speed = 105.0
-touch_damage = 8.0
-touch_knockback = 90.0
-player_knockback = 140.0
-stop_distance = 34.0
-separation_radius = 44.0
-separation_strength = 155.0
-touch_interval = 0.6
+behavior_type = 1
+max_health = 7.0
+move_speed = 132.0
+touch_damage = 4.0
+touch_knockback = 55.0
+player_knockback = 95.0
+stop_distance = 24.0
+separation_radius = 28.0
+separation_strength = 120.0
+touch_interval = 0.35
 experience_reward = 1
+knockback_taken_mult = 1.15

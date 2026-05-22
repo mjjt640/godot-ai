@@ -27,25 +27,23 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="MarginContainer" type="MarginContainer" parent="Root"]
+[node name="StatusPanel" type="MarginContainer" parent="Root"]
 layout_mode = 1
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -420.0
+anchors_preset = 1
+anchor_right = 0.0
+offset_left = 14.0
 offset_top = 14.0
-offset_right = 420.0
-offset_bottom = 96.0
-grow_horizontal = 2
+offset_right = 520.0
+offset_bottom = 142.0
 theme_override_constants/margin_left = 14
 theme_override_constants/margin_top = 10
 theme_override_constants/margin_right = 14
 theme_override_constants/margin_bottom = 10
 
-[node name="Panel" type="Panel" parent="Root/MarginContainer"]
+[node name="Panel" type="Panel" parent="Root/StatusPanel"]
 layout_mode = 2
 
-[node name="HBoxContainer" type="HBoxContainer" parent="Root/MarginContainer/Panel"]
+[node name="VBoxContainer" type="VBoxContainer" parent="Root/StatusPanel/Panel"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -56,29 +54,33 @@ offset_right = -16.0
 offset_bottom = -10.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 24
+theme_override_constants/separation = 8
 
-[node name="LevelLabel" type="Label" parent="Root/MarginContainer/Panel/HBoxContainer"]
+[node name="TopRow" type="HBoxContainer" parent="Root/StatusPanel/Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="LevelLabel" type="Label" parent="Root/StatusPanel/Panel/VBoxContainer/TopRow"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "等级 1"
 
-[node name="CharacterLabel" type="Label" parent="Root/MarginContainer/Panel/HBoxContainer"]
+[node name="CharacterLabel" type="Label" parent="Root/StatusPanel/Panel/VBoxContainer/TopRow"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "角色：核心行者"
 
-[node name="HealthBox" type="VBoxContainer" parent="Root/MarginContainer/Panel/HBoxContainer"]
+[node name="HealthBox" type="VBoxContainer" parent="Root/StatusPanel/Panel/VBoxContainer/TopRow"]
 layout_mode = 2
 custom_minimum_size = Vector2(170, 0)
 theme_override_constants/separation = 4
 
-[node name="HealthLabel" type="Label" parent="Root/MarginContainer/Panel/HBoxContainer/HealthBox"]
+[node name="HealthLabel" type="Label" parent="Root/StatusPanel/Panel/VBoxContainer/TopRow/HealthBox"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "生命 100 / 100"
 
-[node name="HealthBar" type="ProgressBar" parent="Root/MarginContainer/Panel/HBoxContainer/HealthBox"]
+[node name="HealthBar" type="ProgressBar" parent="Root/StatusPanel/Panel/VBoxContainer/TopRow/HealthBox"]
 unique_name_in_owner = true
 layout_mode = 2
 custom_minimum_size = Vector2(170, 10)
@@ -88,20 +90,78 @@ max_value = 100.0
 value = 100.0
 show_percentage = false
 
-[node name="XpLabel" type="Label" parent="Root/MarginContainer/Panel/HBoxContainer"]
+[node name="XpLabel" type="Label" parent="Root/StatusPanel/Panel/VBoxContainer/TopRow"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "经验 0 / 5"
 
-[node name="FireModeLabel" type="Label" parent="Root/MarginContainer/Panel/HBoxContainer"]
+[node name="FireModeLabel" type="Label" parent="Root/StatusPanel/Panel/VBoxContainer/TopRow"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "发射：单发"
 
-[node name="PayloadLabel" type="Label" parent="Root/MarginContainer/Panel/HBoxContainer"]
+[node name="PayloadLabel" type="Label" parent="Root/StatusPanel/Panel/VBoxContainer/TopRow"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "弹头：普通弹头"
+
+[node name="BottomRow" type="HBoxContainer" parent="Root/StatusPanel/Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="RunTimeLabel" type="Label" parent="Root/StatusPanel/Panel/VBoxContainer/BottomRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "时间 00:00"
+
+[node name="ObjectiveLabel" type="Label" parent="Root/StatusPanel/Panel/VBoxContainer/BottomRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "目标：撑到压制核心出现并击破它"
+
+[node name="NextEventLabel" type="Label" parent="Root/StatusPanel/Panel/VBoxContainer/BottomRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "精英来袭：01:15后"
+
+[node name="BossHealthPanel" type="PanelContainer" parent="Root"]
+unique_name_in_owner = true
+visible = false
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -260.0
+offset_top = 14.0
+offset_right = 260.0
+offset_bottom = 74.0
+grow_horizontal = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="Root/BossHealthPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Root/BossHealthPanel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="BossHealthLabel" type="Label" parent="Root/BossHealthPanel/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "压制核心"
+horizontal_alignment = 1
+
+[node name="BossHealthBar" type="ProgressBar" parent="Root/BossHealthPanel/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(480, 12)
+theme_override_styles/background = SubResource("StyleBoxFlat_health_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_health_fill")
+max_value = 100.0
+value = 100.0
+show_percentage = false
 
 [node name="GameOverPanel" type="PanelContainer" parent="Root"]
 unique_name_in_owner = true

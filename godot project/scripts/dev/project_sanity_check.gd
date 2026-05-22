@@ -1,7 +1,10 @@
 extends SceneTree
 
 const CollisionLayers = preload("res://scripts/config/collision_layers.gd")
+const DashEnemySkillDataScript = preload("res://resources/enemies/skills/dash_enemy_skill_data.gd")
 const GameText = preload("res://scripts/ui/game_text.gd")
+const ENEMY_BEHAVIOR_PRESSURE := 2
+const ENEMY_BEHAVIOR_SHIELD := 3
 
 class DamageProbe:
 	extends Node2D
@@ -37,10 +40,18 @@ func _run() -> void:
 	_check_arena_hazards()
 	_check_game_root_scene()
 	_check_combat_feedback_resource()
+	_check_combat_feedback_readability_hooks()
 	_check_projectile_single_target_hit()
 	_check_projectile_explosion_damage_multiplier()
 	_check_enemy_soft_separation()
+	_check_enemy_obstacle_navigation()
+	_check_enemy_skill_executor_split()
+	_check_boss_wide_body_navigation_and_state()
 	_check_health_bar_ui()
+	_check_hud_run_objective_ui()
+	_check_boss_health_bar_ui()
+	_check_enemy_health_bar_rules()
+	_check_enemy_behavior_variants()
 	_check_stat_upgrade_applies_to_profile()
 	_check_character_stats_apply_to_profile()
 	_check_critical_hit_damage()
@@ -56,6 +67,7 @@ func _run() -> void:
 	_check_run_tuning()
 	_check_run_objective()
 	_check_wave_table()
+	_check_enemy_templates_and_pool_variety()
 	_check_spawn_manager_is_resource_driven()
 	_check_script_text_boundaries()
 	_check_upgrade_card_uses_game_text()
@@ -169,6 +181,67 @@ func _check_combat_feedback_resource() -> void:
 	_expect(float(feedback.get("explosion_effect_ring_width")) > 0.0, "Combat feedback needs positive explosion_effect_ring_width")
 	_expect(feedback.get("explosion_effect_ring_color") is Color, "Combat feedback needs explosion_effect_ring_color")
 	_expect(feedback.get("explosion_effect_fill_color") is Color, "Combat feedback needs explosion_effect_fill_color")
+
+
+func _check_combat_feedback_readability_hooks() -> void:
+	var feedback := load("res://resources/combat/default_combat_feedback.tres")
+	if feedback == null:
+		return
+
+	_expect(feedback.get("damage_number_elite_color") is Color, "Combat feedback needs elite damage number color")
+	_expect(feedback.get("damage_number_boss_color") is Color, "Combat feedback needs boss damage number color")
+	var flash_duration: Variant = feedback.get("player_hit_flash_duration")
+	_expect(flash_duration != null and float(flash_duration) > 0.0, "Combat feedback needs positive player hit flash duration")
+	_expect(feedback.get("player_hit_flash_color") is Color, "Combat feedback needs player hit flash color")
+	var pressure_warning_duration: Variant = feedback.get("pressure_warning_duration")
+	var pressure_warning_ring_width: Variant = feedback.get("pressure_warning_ring_width")
+	var pressure_warning_marker_size: Variant = feedback.get("pressure_warning_marker_size")
+	var pressure_warning_marker_width: Variant = feedback.get("pressure_warning_marker_width")
+	var pressure_warning_countdown_width: Variant = feedback.get("pressure_warning_countdown_width")
+	var pressure_warning_edge_marker_count: Variant = feedback.get("pressure_warning_edge_marker_count")
+	var pressure_warning_edge_marker_size: Variant = feedback.get("pressure_warning_edge_marker_size")
+	var pressure_impact_duration: Variant = feedback.get("pressure_impact_duration")
+	var pressure_impact_ring_width: Variant = feedback.get("pressure_impact_ring_width")
+	var pressure_impact_burst_count: Variant = feedback.get("pressure_impact_burst_count")
+	var pressure_impact_burst_length: Variant = feedback.get("pressure_impact_burst_length")
+	var pressure_impact_burst_width: Variant = feedback.get("pressure_impact_burst_width")
+	_expect(pressure_warning_duration != null and float(pressure_warning_duration) > 0.0, "Combat feedback needs positive pressure warning duration")
+	_expect(pressure_warning_ring_width != null and float(pressure_warning_ring_width) > 0.0, "Combat feedback needs pressure warning ring width")
+	_expect(feedback.get("pressure_warning_ring_color") is Color, "Combat feedback needs pressure warning ring color")
+	_expect(feedback.get("pressure_warning_fill_color") is Color, "Combat feedback needs pressure warning fill color")
+	_expect(pressure_warning_marker_size != null and float(pressure_warning_marker_size) > 0.0, "Combat feedback needs pressure warning marker size")
+	_expect(pressure_warning_marker_width != null and float(pressure_warning_marker_width) > 0.0, "Combat feedback needs pressure warning marker width")
+	_expect(feedback.get("pressure_warning_marker_color") is Color, "Combat feedback needs pressure warning marker color")
+	_expect(pressure_warning_countdown_width != null and float(pressure_warning_countdown_width) > 0.0, "Combat feedback needs pressure warning countdown width")
+	_expect(feedback.get("pressure_warning_countdown_color") is Color, "Combat feedback needs pressure warning countdown color")
+	_expect(pressure_warning_edge_marker_count != null and int(pressure_warning_edge_marker_count) > 0, "Combat feedback needs pressure warning edge markers")
+	_expect(pressure_warning_edge_marker_size != null and float(pressure_warning_edge_marker_size) > 0.0, "Combat feedback needs pressure warning edge marker size")
+	_expect(feedback.get("pressure_warning_edge_marker_color") is Color, "Combat feedback needs pressure warning edge marker color")
+	_expect(pressure_impact_duration != null and float(pressure_impact_duration) > 0.0, "Combat feedback needs pressure impact duration")
+	_expect(pressure_impact_ring_width != null and float(pressure_impact_ring_width) > 0.0, "Combat feedback needs pressure impact ring width")
+	_expect(feedback.get("pressure_impact_ring_color") is Color, "Combat feedback needs pressure impact ring color")
+	_expect(feedback.get("pressure_impact_fill_color") is Color, "Combat feedback needs pressure impact fill color")
+	_expect(pressure_impact_burst_count != null and int(pressure_impact_burst_count) > 0, "Combat feedback needs pressure impact burst count")
+	_expect(pressure_impact_burst_length != null and float(pressure_impact_burst_length) > 0.0, "Combat feedback needs pressure impact burst length")
+	_expect(pressure_impact_burst_width != null and float(pressure_impact_burst_width) > 0.0, "Combat feedback needs pressure impact burst width")
+	_expect(feedback.get("pressure_impact_burst_color") is Color, "Combat feedback needs pressure impact burst color")
+
+	var enemy_source := FileAccess.get_file_as_string("res://scripts/game/enemy_controller.gd")
+	_expect(enemy_source.find("damage_number_boss_color") >= 0, "EnemyController should use boss damage number feedback")
+	_expect(enemy_source.find("damage_number_elite_color") >= 0, "EnemyController should use elite damage number feedback")
+	_expect(enemy_source.find("PressureWarningEffect") >= 0, "EnemyController should spawn pressure warning effects")
+	_expect(enemy_source.find("PressureImpactEffect") >= 0, "EnemyController should spawn pressure impact effects")
+
+	var warning_source := FileAccess.get_file_as_string("res://scripts/effects/pressure_warning_effect.gd")
+	_expect(warning_source.find("draw_line") >= 0, "Pressure warning effect should draw a center marker")
+	_expect(warning_source.find("draw_colored_polygon") >= 0, "Pressure warning effect should draw edge danger markers")
+	_expect(warning_source.find("pressure_warning_countdown") >= 0, "Pressure warning effect should draw countdown feedback")
+
+	var impact_source := FileAccess.get_file_as_string("res://scripts/effects/pressure_impact_effect.gd")
+	_expect(impact_source.find("pressure_impact_burst") >= 0, "Pressure impact effect should draw burst feedback")
+
+	var player_source := FileAccess.get_file_as_string("res://scripts/player/player_controller.gd")
+	_expect(player_source.find("player_hit_flash_color") >= 0, "PlayerController should use player hit flash feedback")
 
 
 func _check_xp_pickup_magnet_is_player_driven() -> void:
@@ -295,6 +368,141 @@ func _check_enemy_soft_separation() -> void:
 	_remove_instance(player)
 
 
+func _check_enemy_obstacle_navigation() -> void:
+	var player := _instantiate_scene("res://scenes/player/player.tscn") as PlayerController
+	var enemy := _instantiate_scene("res://scenes/enemies/enemy_basic.tscn") as EnemyController
+	if player == null or enemy == null:
+		return
+
+	var obstacle := _create_test_world_obstacle(Vector2.ZERO, Vector2(96.0, 140.0))
+	root.add_child(player)
+	root.add_child(enemy)
+	root.add_child(obstacle)
+	player.global_position = Vector2(180.0, 0.0)
+	enemy.global_position = Vector2(-160.0, 0.0)
+	enemy.call("_reset_navigation_stuck")
+	var initial_distance := enemy.global_position.distance_to(player.global_position)
+	var initial_y := enemy.global_position.y
+	for _step in range(24):
+		enemy._physics_process(0.1)
+	var final_distance := enemy.global_position.distance_to(player.global_position)
+
+	_expect(absf(enemy.global_position.y - initial_y) > 16.0, "Enemy should steer sideways when a world obstacle blocks the direct chase line")
+	_expect(final_distance < initial_distance, "Enemy obstacle navigation should still make progress toward the player")
+	_remove_instance(obstacle)
+	_remove_instance(enemy)
+	_remove_instance(player)
+
+
+func _check_enemy_skill_executor_split() -> void:
+	var base_executor_path := "res://scripts/game/enemy_skill_executor.gd"
+	var dash_executor_path := "res://scripts/game/dash_skill_executor.gd"
+	_expect(FileAccess.file_exists(base_executor_path), "EnemySkillExecutor base script should own the common skill executor contract")
+	_expect(FileAccess.file_exists(dash_executor_path), "DashSkillExecutor should own dash-specific enemy skill behavior")
+
+	var enemy_source := FileAccess.get_file_as_string("res://scripts/game/enemy_controller.gd")
+	_expect(enemy_source.find("_skill_executors") >= 0, "EnemyController should route enemy skills through an executor list")
+	_expect(enemy_source.find("DashEnemySkillDataScript") == -1, "EnemyController should not preload dash-specific skill data")
+	_expect(enemy_source.find("BossDashWarningEffect") == -1, "EnemyController should not spawn dash warning effects directly")
+	_expect(enemy_source.find("_begin_active_dash") == -1, "EnemyController should not contain dash phase implementation details")
+	_expect(enemy_source.find("_try_dash_hit_target") == -1, "EnemyController should not contain dash hit implementation details")
+
+	if FileAccess.file_exists(base_executor_path):
+		var base_executor_source := FileAccess.get_file_as_string(base_executor_path)
+		_expect(base_executor_source.find("func can_start(") >= 0, "EnemySkillExecutor should expose can_start")
+		_expect(base_executor_source.find("func start(") >= 0, "EnemySkillExecutor should expose start")
+		_expect(base_executor_source.find("func update(") >= 0, "EnemySkillExecutor should expose update")
+		_expect(base_executor_source.find("func finish(") >= 0, "EnemySkillExecutor should expose finish")
+
+	if FileAccess.file_exists(dash_executor_path):
+		var dash_executor_source := FileAccess.get_file_as_string(dash_executor_path)
+		_expect(dash_executor_source.find("extends \"res://scripts/game/enemy_skill_executor.gd\"") >= 0, "DashSkillExecutor should inherit the common executor contract")
+		_expect(dash_executor_source.find("DashEnemySkillData") >= 0, "DashSkillExecutor should own dash skill data matching")
+		_expect(dash_executor_source.find("BossDashWarningEffect") >= 0, "DashSkillExecutor should own dash warning effects")
+		_expect(dash_executor_source.find("take_damage") >= 0, "DashSkillExecutor should own dash hit damage")
+
+
+func _check_boss_wide_body_navigation_and_state() -> void:
+	var player := _instantiate_scene("res://scenes/player/player.tscn") as PlayerController
+	var boss := _instantiate_scene("res://scenes/enemies/enemy_boss_overseer.tscn") as EnemyController
+	if player == null or boss == null:
+		return
+
+	var dash_skill := load("res://resources/enemies/skills/boss_dash.tres")
+	var boss_skill_pool := load("res://resources/enemies/skill_pools/boss_overseer_skill_pool.tres")
+	_expect(dash_skill != null, "Boss dash skill template should load")
+	_expect(boss_skill_pool != null, "Boss Overseer skill pool should load")
+	if dash_skill != null:
+		_expect(dash_skill.get("id") == &"boss_dash", "Boss dash skill should have a stable id")
+		_expect(dash_skill.get("display_name") != "", "Boss dash skill needs a Chinese display name")
+		_expect(dash_skill.get_script() == DashEnemySkillDataScript, "Boss dash skill should use a dash-specific skill subclass")
+		_expect(float(dash_skill.get("cooldown")) > 0.0, "Boss dash skill needs positive cooldown")
+		_expect(float(dash_skill.get("weight")) > 0.0, "Boss dash skill needs positive common weight")
+		_expect(float(dash_skill.get("windup_duration")) > 0.0, "Boss dash skill needs positive windup duration")
+		_expect(float(dash_skill.get("dash_speed")) > 0.0, "Boss dash skill needs positive dash speed")
+		_expect(float(dash_skill.get("dash_duration")) > 0.0, "Boss dash skill needs positive dash duration")
+		_expect(float(dash_skill.get("recover_duration")) > 0.0, "Boss dash skill needs positive recover duration")
+		_expect(float(dash_skill.get("damage")) > 0.0, "Boss dash skill needs positive damage")
+		_expect(float(dash_skill.get("knockback")) > 0.0, "Boss dash skill needs positive knockback")
+		_expect(float(dash_skill.get("warning_length")) > 0.0, "Boss dash skill needs positive warning length")
+		_expect(float(dash_skill.get("warning_width")) > 0.0, "Boss dash skill needs positive warning width")
+	var base_skill_source := FileAccess.get_file_as_string("res://resources/enemies/enemy_skill_data.gd")
+	_expect(base_skill_source.find("dash_speed") == -1, "EnemySkillData base class should not define dash-specific values")
+	_expect(base_skill_source.find("warning_length") == -1, "EnemySkillData base class should not define warning-shape values")
+	var dash_skill_source := FileAccess.get_file_as_string("res://resources/enemies/skills/dash_enemy_skill_data.gd")
+	_expect(dash_skill_source.find("extends \"res://resources/enemies/enemy_skill_data.gd\"") >= 0, "Dash skill data should inherit common enemy skill data")
+	if boss_skill_pool != null:
+		var skills: Array = boss_skill_pool.get("skills")
+		_expect(not skills.is_empty(), "Boss skill pool should reserve at least one skill slot")
+		_expect(skills.has(dash_skill), "Boss skill pool should include the dash skill template")
+	if boss.enemy_data != null:
+		var resolved_pool := boss.enemy_data.get_skill_pool()
+		_expect(resolved_pool == boss_skill_pool, "Boss enemy data should resolve its independent skill pool from its template")
+
+	var shoulder_obstacle := _create_test_world_obstacle(Vector2(86.0, 40.0), Vector2(30.0, 20.0))
+	var effect_container := Node2D.new()
+	root.add_child(player)
+	root.add_child(boss)
+	root.add_child(shoulder_obstacle)
+	root.add_child(effect_container)
+	current_scene = effect_container
+	player.global_position = Vector2(220.0, 0.0)
+	boss.global_position = Vector2.ZERO
+	boss.call("_reset_navigation_stuck")
+	var center_clearance: float = boss.call("_get_center_world_clearance", Vector2.RIGHT, 140.0)
+	var wide_clearance: float = boss.call("_get_world_clearance", Vector2.RIGHT, 140.0)
+	_expect(is_equal_approx(center_clearance, 140.0), "Boss center ray should stay clear in the shoulder obstacle probe")
+	_expect(wide_clearance < center_clearance, "Boss wide body probe should detect shoulder obstacles")
+
+	_expect(boss.has_method("begin_boss_windup"), "Boss should expose a windup state entry for future skills")
+	_expect(boss.has_method("begin_boss_dash"), "Boss should expose a dash state entry for future skills")
+	_expect(boss.has_method("begin_boss_recover"), "Boss should expose a recover state entry for future skills")
+	_expect(boss.has_method("get_combat_state"), "Boss should expose combat state for skill tests")
+	boss.begin_boss_windup(0.2)
+	_expect(int(boss.get_combat_state()) == 1, "Boss windup entry should leave chase state")
+	boss.begin_boss_dash(Vector2.RIGHT, 120.0, 0.2)
+	_expect(int(boss.get_combat_state()) == 2, "Boss dash entry should switch to dash state")
+	boss.begin_boss_recover(0.2)
+	_expect(int(boss.get_combat_state()) == 3, "Boss recover entry should switch to recover state")
+	boss.return_to_chase()
+	_expect(int(boss.get_combat_state()) == 0, "Boss should return to chase after skill states")
+	if dash_skill != null:
+		boss.call("_start_enemy_skill", dash_skill, Vector2.RIGHT)
+		_expect(int(boss.get_combat_state()) == 1, "Boss skill template should start from windup")
+		_expect(effect_container.get_child_count() > 0, "Boss dash skill should spawn a warning effect")
+		boss._physics_process(float(dash_skill.get("windup_duration")) + 0.05)
+		_expect(int(boss.get_combat_state()) == 2, "Boss dash skill should enter dash after windup")
+		var skill_cooldowns: Dictionary = boss.get("_skill_cooldowns")
+		_expect(float(skill_cooldowns.get(dash_skill.get("id"), 0.0)) > 0.0, "Boss dash skill should set cooldown from template")
+		boss.return_to_chase()
+
+	current_scene = null
+	_remove_instance(effect_container)
+	_remove_instance(shoulder_obstacle)
+	_remove_instance(boss)
+	_remove_instance(player)
+
+
 func _check_health_bar_ui() -> void:
 	var hud := _instantiate_scene("res://scenes/ui/hud.tscn")
 	if hud != null:
@@ -321,6 +529,183 @@ func _check_health_bar_ui() -> void:
 		if enemy_health_bar != null:
 			_expect(not enemy_health_bar.show_percentage, "%s enemy health bar should hide percentage text" % scene_path)
 		_remove_instance(enemy)
+
+
+func _check_hud_run_objective_ui() -> void:
+	var hud := _instantiate_scene("res://scenes/ui/hud.tscn") as HUDController
+	if hud == null:
+		return
+
+	root.add_child(hud)
+	_expect(hud.get_node_or_null("%RunTimeLabel") != null, "HUD should include a run time Label")
+	_expect(hud.get_node_or_null("%ObjectiveLabel") != null, "HUD should include a run objective Label")
+	_expect(hud.get_node_or_null("%NextEventLabel") != null, "HUD should include a next objective event Label")
+
+	var objective := load("res://resources/runs/default_run_objective.tres")
+	hud.update_run_status(12.0, objective)
+	var run_time_label := hud.get_node_or_null("%RunTimeLabel") as Label
+	var objective_label := hud.get_node_or_null("%ObjectiveLabel") as Label
+	var next_event_label := hud.get_node_or_null("%NextEventLabel") as Label
+	if run_time_label != null:
+		_expect(run_time_label.text.find("00:12") >= 0, "HUD run time should render elapsed time")
+	if objective_label != null:
+		_expect(objective_label.text.find("目标") >= 0, "HUD objective text should explain the run objective")
+	if next_event_label != null:
+		_expect(next_event_label.text.find("精英") >= 0, "HUD next event should describe the first elite event")
+		_expect(next_event_label.text.find(GameText.format_time(58.0)) >= 0, "HUD next event should show remaining time")
+
+	hud.update_run_status(181.0, objective)
+	if next_event_label != null:
+		_expect(next_event_label.text.find("Boss") >= 0 or next_event_label.text.find("压制核心") >= 0, "HUD next event should keep boss pressure visible after boss spawn")
+	_remove_instance(hud)
+
+
+func _check_boss_health_bar_ui() -> void:
+	var hud := _instantiate_scene("res://scenes/ui/hud.tscn") as HUDController
+	if hud == null:
+		return
+
+	root.add_child(hud)
+	var status_panel := hud.get_node_or_null("Root/StatusPanel")
+	_expect(status_panel != null, "HUD player status should be anchored in the upper-left StatusPanel")
+	var old_center_margin := hud.get_node_or_null("Root/MarginContainer")
+	_expect(old_center_margin == null, "HUD should not keep player status in a centered MarginContainer")
+
+	var boss_panel := hud.get_node_or_null("%BossHealthPanel") as Control
+	var boss_bar := hud.get_node_or_null("%BossHealthBar") as ProgressBar
+	var boss_label := hud.get_node_or_null("%BossHealthLabel") as Label
+	_expect(boss_panel != null, "HUD should include a top-center BossHealthPanel")
+	_expect(boss_bar != null, "HUD should include a BossHealthBar")
+	_expect(boss_label != null, "HUD should include a BossHealthLabel")
+	if boss_panel != null:
+		_expect(not boss_panel.visible, "Boss health panel should start hidden")
+
+	var boss := _instantiate_scene("res://scenes/enemies/enemy_boss_overseer.tscn") as EnemyController
+	if boss != null:
+		root.add_child(boss)
+		_expect(hud.has_method("track_boss"), "HUD should expose track_boss for boss health UI")
+		if hud.has_method("track_boss"):
+			hud.track_boss(boss)
+		if boss_panel != null:
+			_expect(boss_panel.visible, "Boss health panel should show while tracking boss")
+		if boss_bar != null:
+			_expect(is_equal_approx(boss_bar.max_value, boss.get_max_health()), "Boss health bar max should use boss health")
+		boss.take_damage(10.0)
+		if boss_bar != null:
+			_expect(is_equal_approx(boss_bar.value, boss.health), "Boss health bar should update from boss health signal")
+		_remove_instance(boss)
+	_remove_instance(hud)
+
+
+func _check_enemy_health_bar_rules() -> void:
+	var normal_enemy := _instantiate_scene("res://scenes/enemies/enemy_basic.tscn") as EnemyController
+	var elite_enemy := _instantiate_scene("res://scenes/enemies/enemy_elite_brute.tscn") as EnemyController
+	var boss_enemy := _instantiate_scene("res://scenes/enemies/enemy_boss_overseer.tscn") as EnemyController
+	if normal_enemy != null:
+		root.add_child(normal_enemy)
+		var normal_bar := normal_enemy.get_node_or_null("HealthBar") as ProgressBar
+		_expect(normal_bar != null, "Normal enemy should keep a hit-revealed health bar")
+		if normal_bar != null:
+			_expect(not normal_bar.visible, "Normal enemy health bar should start hidden")
+			normal_enemy.take_damage(1.0)
+			_expect(normal_bar.visible, "Normal enemy health bar should show after taking damage")
+		_remove_instance(normal_enemy)
+	if elite_enemy != null:
+		root.add_child(elite_enemy)
+		var elite_bar := elite_enemy.get_node_or_null("HealthBar") as ProgressBar
+		_expect(elite_bar != null, "Elite enemy should include a persistent overhead health bar")
+		if elite_bar != null:
+			_expect(elite_bar.visible, "Elite enemy health bar should be persistent")
+		_remove_instance(elite_enemy)
+	if boss_enemy != null:
+		root.add_child(boss_enemy)
+		var boss_bar := boss_enemy.get_node_or_null("HealthBar") as ProgressBar
+		_expect(boss_bar == null or not boss_bar.visible, "Boss overhead health bar should not compete with HUD boss bar")
+		_remove_instance(boss_enemy)
+
+
+func _check_enemy_behavior_variants() -> void:
+	var ranged_data := load("res://resources/enemies/enemy_ranged.tres") as EnemyData
+	var shield_data := load("res://resources/enemies/enemy_shield.tres") as EnemyData
+	_expect(ranged_data != null, "Ranged pressure enemy data should load")
+	_expect(shield_data != null, "Shield enemy data should load")
+	if ranged_data != null:
+		_expect(ranged_data.has_method("get_behavior_type"), "EnemyData should expose resolved behavior type")
+		_expect(ranged_data.has_method("get_pressure_interval"), "EnemyData should expose resolved pressure interval")
+		_expect(ranged_data.has_method("get_pressure_range"), "EnemyData should expose resolved pressure range")
+		_expect(ranged_data.has_method("get_pressure_radius"), "EnemyData should expose resolved pressure warning radius")
+		_expect(ranged_data.has_method("get_pressure_warning_duration"), "EnemyData should expose resolved pressure warning duration")
+		if ranged_data.has_method("get_behavior_type"):
+			_expect(ranged_data.get_behavior_type() == ENEMY_BEHAVIOR_PRESSURE, "Ranged pressure enemy should use PRESSURE behavior")
+		if ranged_data.has_method("get_pressure_interval"):
+			_expect(ranged_data.get_pressure_interval() > 0.0, "Pressure enemy should resolve pressure interval")
+		if ranged_data.has_method("get_pressure_range"):
+			_expect(ranged_data.get_pressure_range() > ranged_data.get_stop_distance(), "Pressure enemy range should exceed stop distance")
+		if ranged_data.has_method("get_pressure_radius"):
+			_expect(ranged_data.get_pressure_radius() > 0.0, "Pressure enemy should resolve warning radius")
+		if ranged_data.has_method("get_pressure_warning_duration"):
+			_expect(ranged_data.get_pressure_warning_duration() > 0.0, "Pressure enemy should resolve warning duration")
+	if shield_data != null:
+		_expect(shield_data.has_method("get_behavior_type"), "EnemyData should expose resolved behavior type")
+		_expect(shield_data.has_method("get_knockback_taken_mult"), "EnemyData should expose resolved knockback taken multiplier")
+		if shield_data.has_method("get_behavior_type"):
+			_expect(shield_data.get_behavior_type() == ENEMY_BEHAVIOR_SHIELD, "Shield enemy should use SHIELD behavior")
+		if shield_data.has_method("get_knockback_taken_mult"):
+			_expect(shield_data.get_knockback_taken_mult() < 1.0, "Shield enemy should reduce incoming knockback")
+
+	var player := _instantiate_scene("res://scenes/player/player.tscn") as PlayerController
+	var pressure_enemy := _instantiate_scene("res://scenes/enemies/enemy_ranged.tscn") as EnemyController
+	var shield_enemy := _instantiate_scene("res://scenes/enemies/enemy_shield.tscn") as EnemyController
+	if player != null and pressure_enemy != null:
+		var effect_container := Node2D.new()
+		root.add_child(effect_container)
+		current_scene = effect_container
+		root.add_child(player)
+		root.add_child(pressure_enemy)
+		player.global_position = Vector2.ZERO
+		pressure_enemy.global_position = Vector2(120.0, 0.0)
+		if player.health <= 0.0:
+			player.health = player.max_health
+		var initial_health := player.health
+		pressure_enemy._physics_process(0.1)
+		_expect(player.health == initial_health, "PRESSURE enemy should warn before dealing damage")
+		_expect(effect_container.get_child_count() > 0, "PRESSURE enemy should spawn a warning circle effect")
+		var warning_effect_count := effect_container.get_child_count()
+		if ranged_data.has_method("get_pressure_warning_duration"):
+			pressure_enemy._physics_process(ranged_data.get_pressure_warning_duration() + 0.05)
+			_expect(player.health < initial_health, "PRESSURE enemy should damage player after warning if still in the marked area")
+			_expect(effect_container.get_child_count() > warning_effect_count, "PRESSURE enemy should spawn an impact effect on hit")
+		_remove_instance(pressure_enemy)
+		_remove_instance(player)
+		current_scene = null
+		_remove_instance(effect_container)
+	var dodge_player := _instantiate_scene("res://scenes/player/player.tscn") as PlayerController
+	var dodge_enemy := _instantiate_scene("res://scenes/enemies/enemy_ranged.tscn") as EnemyController
+	if dodge_player != null and dodge_enemy != null:
+		var dodge_effect_container := Node2D.new()
+		root.add_child(dodge_effect_container)
+		current_scene = dodge_effect_container
+		root.add_child(dodge_player)
+		root.add_child(dodge_enemy)
+		dodge_player.global_position = Vector2.ZERO
+		dodge_enemy.global_position = Vector2(120.0, 0.0)
+		if dodge_player.health <= 0.0:
+			dodge_player.health = dodge_player.max_health
+		var dodge_initial_health := dodge_player.health
+		dodge_enemy._physics_process(0.1)
+		dodge_player.global_position = Vector2(0.0, 120.0)
+		if ranged_data != null and ranged_data.has_method("get_pressure_warning_duration"):
+			dodge_enemy._physics_process(ranged_data.get_pressure_warning_duration() + 0.05)
+			_expect(is_equal_approx(dodge_player.health, dodge_initial_health), "PRESSURE enemy warning should be avoidable by leaving the marked area")
+		_remove_instance(dodge_enemy)
+		_remove_instance(dodge_player)
+		current_scene = null
+		_remove_instance(dodge_effect_container)
+	if shield_enemy != null:
+		root.add_child(shield_enemy)
+		shield_enemy.apply_hit_reaction(Vector2.RIGHT, 100.0)
+		_expect(shield_enemy.velocity.length() < 100.0, "SHIELD enemy should reduce incoming hit reaction")
+		_remove_instance(shield_enemy)
 
 
 func _check_stat_upgrade_applies_to_profile() -> void:
@@ -520,8 +905,12 @@ func _check_default_character_pool() -> void:
 
 	var characters: Array = pool.get("characters")
 	_expect(not characters.is_empty(), "Default character pool needs at least one character")
+	_expect(characters.size() >= 3, "Default character pool should include first-pass character variety")
 	var default_character: Resource = pool.call("get_default_character") as Resource
 	_expect(default_character != null, "Default character pool should resolve default character")
+	for character in characters:
+		if character != null:
+			_check_character_fields(character, "Pooled character %s" % character.get("id"))
 	if default_character != null:
 		_check_character_fields(default_character, "Default pooled character")
 
@@ -585,6 +974,9 @@ func _check_module_skill_pool() -> void:
 	var has_attack_range_boost := false
 	var has_crit_chance_boost := false
 	var has_crit_damage_boost := false
+	var has_piercing_firepower := false
+	var has_wide_spread := false
+	var has_blast_aftershock := false
 	var has_legendary_option := false
 	_expect(pool.option_count == 3, "Default module skill pool should present three options")
 	_expect(pool.common_rarity_weight > pool.rare_rarity_weight, "Module skill common weight should exceed rare weight")
@@ -620,6 +1012,15 @@ func _check_module_skill_pool() -> void:
 				has_crit_chance_boost = true
 			if option.stat_modifiers.has(&"crit_damage_mult_add"):
 				has_crit_damage_boost = true
+		if option.id == &"upgrade_piercing_firepower":
+			has_piercing_firepower = true
+			_expect(option.required_module_ids.has(&"piercing_round"), "Piercing firepower should depend on piercing module")
+		if option.id == &"upgrade_wide_spread":
+			has_wide_spread = true
+			_expect(option.required_module_ids.has(&"spread_fire"), "Wide spread should depend on spread fire module")
+		if option.id == &"upgrade_blast_aftershock":
+			has_blast_aftershock = true
+			_expect(option.required_module_ids.has(&"explosive_payload"), "Blast aftershock should depend on explosive payload module")
 	_expect(effect_stat_option_count >= 8, "Default module skill pool should include resource-driven module skills")
 	_expect(has_blast_radius_boost, "Default upgrade pool should include a separate blast radius upgrade")
 	_expect(has_splash_damage_boost, "Default upgrade pool should include a separate splash damage upgrade")
@@ -628,6 +1029,9 @@ func _check_module_skill_pool() -> void:
 	_expect(has_attack_range_boost, "Default module skill pool should include attack range module skill")
 	_expect(has_crit_chance_boost, "Default module skill pool should include crit chance module skill")
 	_expect(has_crit_damage_boost, "Default module skill pool should include crit damage module skill")
+	_expect(has_piercing_firepower, "Default module skill pool should include piercing firepower upgrade")
+	_expect(has_wide_spread, "Default module skill pool should include wide spread upgrade")
+	_expect(has_blast_aftershock, "Default module skill pool should include blast aftershock upgrade")
 	_expect(has_legendary_option, "Default upgrade pool should include at least one legendary option")
 
 
@@ -642,6 +1046,7 @@ func _check_general_skill_pool() -> void:
 	var has_move_speed := false
 	var has_xp_gain := false
 	var has_legendary_xp_gain := false
+	var has_epic_magnet_multiplier := false
 	var magnet_rarities: Array[int] = []
 	var health_rarities: Array[int] = []
 	var move_speed_rarities: Array[int] = []
@@ -660,6 +1065,8 @@ func _check_general_skill_pool() -> void:
 		if option.general_modifiers.has(&"xp_magnet_radius_add"):
 			has_magnet_range = true
 			magnet_rarities.append(option.rarity)
+		if option.general_modifiers.has(&"xp_magnet_radius_mult"):
+			has_epic_magnet_multiplier = has_epic_magnet_multiplier or option.rarity == UpgradeOptionData.Rarity.EPIC
 		if option.general_modifiers.has(&"heal_add"):
 			has_health_recovery = true
 			health_rarities.append(option.rarity)
@@ -678,6 +1085,7 @@ func _check_general_skill_pool() -> void:
 	_expect(has_move_speed, "General skill pool should include move speed skill")
 	_expect(has_xp_gain, "General skill pool should include XP gain speed skill")
 	_expect(has_legendary_xp_gain, "General skill pool should include legendary XP gain speed skill")
+	_expect(has_epic_magnet_multiplier, "General skill pool should include epic XP magnet multiplier skill")
 	_expect(_has_common_rare_epic(magnet_rarities), "XP magnet range should have common, rare and epic variants")
 	_expect(_has_common_rare_epic(health_rarities), "Health recovery should have common, rare and epic variants")
 	_expect(_has_common_rare_epic(move_speed_rarities), "Move speed should have common, rare and epic variants")
@@ -783,6 +1191,9 @@ func _check_wave_table() -> void:
 	var has_basic := false
 	var has_fast := false
 	var has_tank := false
+	var has_swarm := false
+	var has_ranged := false
+	var has_shield := false
 	var previous_start := -1.0
 	for entry in entries:
 		_expect(entry != null, "Wave table should not contain null entries")
@@ -803,10 +1214,67 @@ func _check_wave_table() -> void:
 				has_fast = true
 			elif enemy_scene == load("res://scenes/enemies/enemy_tank.tscn"):
 				has_tank = true
+			elif enemy_scene == load("res://scenes/enemies/enemy_swarm.tscn"):
+				has_swarm = true
+			elif enemy_scene == load("res://scenes/enemies/enemy_ranged.tscn"):
+				has_ranged = true
+			elif enemy_scene == load("res://scenes/enemies/enemy_shield.tscn"):
+				has_shield = true
 		previous_start = entry.start_time
 	_expect(has_basic, "Default wave table should include basic enemies")
 	_expect(has_fast, "Default wave table should include fast enemies")
 	_expect(has_tank, "Default wave table should include tank enemies")
+	_expect(has_swarm, "Default wave table should include swarm enemies")
+	_expect(has_ranged, "Default wave table should include ranged pressure enemies")
+	_expect(has_shield, "Default wave table should include shield enemies")
+
+
+func _check_enemy_templates_and_pool_variety() -> void:
+	var normal_template := load("res://resources/enemies/templates/enemy_template_normal.tres")
+	var boss_template := load("res://resources/enemies/templates/enemy_template_boss.tres")
+	_expect(normal_template != null, "Enemy normal template should exist")
+	_expect(boss_template != null, "Enemy boss template should exist")
+	if boss_template != null:
+		_expect(boss_template.get("is_boss"), "Boss template should be marked as boss")
+
+	var enemy_paths := [
+		"res://resources/enemies/enemy_basic.tres",
+		"res://resources/enemies/enemy_fast.tres",
+		"res://resources/enemies/enemy_tank.tres",
+		"res://resources/enemies/enemy_swarm.tres",
+		"res://resources/enemies/enemy_ranged.tres",
+		"res://resources/enemies/enemy_shield.tres",
+		"res://resources/enemies/enemy_elite_brute.tres",
+		"res://resources/enemies/enemy_boss_overseer.tres",
+	]
+	var ids: Array[StringName] = []
+	for path in enemy_paths:
+		var enemy := load(path) as EnemyData
+		_expect(enemy != null, "%s should load as EnemyData" % path)
+		if enemy == null:
+			continue
+		_expect(enemy.get("template") != null, "%s should use an enemy template" % path)
+		_expect(enemy.has_method("get_max_health"), "%s should expose resolved max health" % path)
+		_expect(enemy.has_method("get_move_speed"), "%s should expose resolved move speed" % path)
+		_expect(enemy.has_method("get_path_probe_distance"), "%s should expose resolved path probe distance" % path)
+		_expect(enemy.has_method("get_path_avoidance_strength"), "%s should expose resolved path avoidance strength" % path)
+		_expect(enemy.has_method("get_path_body_probe_scale"), "%s should expose resolved path body probe scale" % path)
+		_expect(enemy.has_method("get_path_stuck_time"), "%s should expose resolved path stuck time" % path)
+		if enemy.has_method("get_max_health"):
+			_expect(enemy.get_max_health() > 0.0, "%s should resolve positive max health" % path)
+		if enemy.has_method("get_move_speed"):
+			_expect(enemy.get_move_speed() > 0.0, "%s should resolve positive move speed" % path)
+		if enemy.has_method("get_path_probe_distance"):
+			_expect(enemy.get_path_probe_distance() > 0.0, "%s should resolve positive path probe distance" % path)
+		if enemy.has_method("get_path_avoidance_strength"):
+			_expect(enemy.get_path_avoidance_strength() > 0.0, "%s should resolve positive path avoidance strength" % path)
+		if enemy.has_method("get_path_body_probe_scale"):
+			_expect(enemy.get_path_body_probe_scale() > 0.0, "%s should resolve positive path body probe scale" % path)
+		if enemy.has_method("get_path_stuck_time"):
+			_expect(enemy.get_path_stuck_time() > 0.0, "%s should resolve positive path stuck time" % path)
+		_expect(not ids.has(enemy.id), "Enemy id should be unique: %s" % enemy.id)
+		ids.append(enemy.id)
+	_expect(ids.size() >= 8, "Enemy resources should include several first-pass monster types")
 
 
 func _check_run_tuning() -> void:
@@ -954,6 +1422,20 @@ func _instantiate_scene(scene_path: String) -> Node:
 	if instance == null:
 		_failures.append("Failed to instantiate %s" % scene_path)
 	return instance
+
+
+func _create_test_world_obstacle(position: Vector2, size: Vector2) -> StaticBody2D:
+	var obstacle := StaticBody2D.new()
+	obstacle.name = "NavigationTestObstacle"
+	obstacle.collision_layer = CollisionLayers.WORLD
+	obstacle.collision_mask = 0
+	obstacle.global_position = position
+	var shape := CollisionShape2D.new()
+	var rectangle := RectangleShape2D.new()
+	rectangle.size = size
+	shape.shape = rectangle
+	obstacle.add_child(shape)
+	return obstacle
 
 
 func _remove_instance(instance: Node) -> void:

@@ -5,16 +5,18 @@
 
 [resource]
 script = ExtResource("1_enemy")
-id = &"enemy_basic"
-display_name = "普通敌人"
+id = &"enemy_shield"
+display_name = "盾甲敌人"
 template = ExtResource("2_template")
-max_health = 20.0
-move_speed = 105.0
-touch_damage = 8.0
-touch_knockback = 90.0
-player_knockback = 140.0
-stop_distance = 34.0
-separation_radius = 44.0
-separation_strength = 155.0
-touch_interval = 0.6
-experience_reward = 1
+behavior_type = 3
+max_health = 42.0
+move_speed = 78.0
+touch_damage = 11.0
+touch_knockback = 115.0
+player_knockback = 175.0
+stop_distance = 40.0
+separation_radius = 54.0
+separation_strength = 145.0
+touch_interval = 0.7
+experience_reward = 3
+knockback_taken_mult = 0.38

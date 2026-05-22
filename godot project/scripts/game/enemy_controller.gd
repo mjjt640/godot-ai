@@ -3,8 +3,20 @@ extends CharacterBody2D
 
 const CollisionLayers = preload("res://scripts/config/collision_layers.gd")
 const DamageNumber = preload("res://scripts/effects/damage_number.gd")
+const EnemyTemplateData = preload("res://resources/enemies/enemy_template_data.gd")
+const DashSkillExecutor = preload("res://scripts/game/dash_skill_executor.gd")
+const PressureImpactEffect = preload("res://scripts/effects/pressure_impact_effect.gd")
+const PressureWarningEffect = preload("res://scripts/effects/pressure_warning_effect.gd")
 
 signal died(experience_reward: int, death_position: Vector2)
+signal health_changed(current_health: float, max_health: float)
+
+enum CombatState {
+	CHASE,
+	WINDUP,
+	DASH,
+	RECOVER
+}
 
 @export var enemy_data: EnemyData
 @export var combat_feedback: Resource = preload("res://resources/combat/default_combat_feedback.tres")
@@ -12,9 +24,24 @@ signal died(experience_reward: int, death_position: Vector2)
 var health: float = 1.0
 var _target: Node2D
 var _touch_cooldown_remaining: float = 0.0
+var _pressure_cooldown_remaining: float = 0.0
+var _pressure_warning_remaining: float = 0.0
+var _pressure_warning_position: Vector2 = Vector2.ZERO
 var _knockback_velocity: Vector2 = Vector2.ZERO
+var _last_navigation_position: Vector2 = Vector2.ZERO
+var _navigation_stuck_time: float = 0.0
+var _detour_direction: int = 0
+var _detour_remaining: float = 0.0
+var _body_probe_radius: float = 0.0
+var _combat_state: CombatState = CombatState.CHASE
+var _combat_state_remaining: float = 0.0
+var _skill_motion_velocity: Vector2 = Vector2.ZERO
+var _skill_cooldowns: Dictionary = {}
+var _skill_executors: Array = []
+var _active_skill_executor
 @onready var _visual: Node2D = get_node_or_null("Visual") as Node2D
 @onready var _health_bar: ProgressBar = get_node_or_null("HealthBar") as ProgressBar
+@onready var _collision_shape: CollisionShape2D = get_node_or_null("CollisionShape2D") as CollisionShape2D
 
 
 func _ready() -> void:
@@ -22,7 +49,10 @@ func _ready() -> void:
 	collision_mask = CollisionLayers.WORLD
 	add_to_group("enemies")
 	if enemy_data != null:
-		health = enemy_data.max_health
+		health = enemy_data.get_max_health()
+	_skill_executors = [DashSkillExecutor.new()]
+	_body_probe_radius = _resolve_body_probe_radius()
+	_last_navigation_position = global_position
 	_refresh_health_bar()
 	_find_target()
 
@@ -34,25 +64,40 @@ func _physics_process(_delta: float) -> void:
 
 	if _touch_cooldown_remaining > 0.0:
 		_touch_cooldown_remaining -= _delta
+	if _pressure_cooldown_remaining > 0.0:
+		_pressure_cooldown_remaining -= _delta
+	if _pressure_warning_remaining > 0.0:
+		_pressure_warning_remaining -= _delta
+		if _pressure_warning_remaining <= 0.0:
+			_resolve_pressure_warning()
+	if _update_combat_state(_delta):
+		return
 
 	var delta_to_target := _target.global_position - global_position
-	var stop_distance := enemy_data.stop_distance if enemy_data != null else 34.0
-	if delta_to_target.length() <= stop_distance:
+	_try_pressure_damage(delta_to_target)
+	_try_enemy_skill(delta_to_target, _delta)
+	if _combat_state != CombatState.CHASE:
+		return
+	var stop_distance := enemy_data.get_stop_distance() if enemy_data != null else 34.0
+	if delta_to_target.length() <= stop_distance and _has_clear_target_line(delta_to_target):
 		_try_touch_damage()
 		velocity = _get_separation_velocity() + _knockback_velocity
 		move_and_slide()
+		_reset_navigation_stuck()
 		_decay_knockback(_delta)
 		return
 
-	var direction := delta_to_target.normalized()
+	var direction := _get_navigation_direction(delta_to_target, _delta)
 	velocity = direction * _get_move_speed() + _get_separation_velocity() + _knockback_velocity
 	move_and_slide()
+	_update_navigation_stuck(_delta, direction)
 	_decay_knockback(_delta)
 
 
 func take_damage(amount: float) -> void:
 	health -= amount
 	_refresh_health_bar()
+	health_changed.emit(health, get_max_health())
 	_play_hit_feedback()
 	_spawn_damage_number(amount)
 	if health <= 0.0:
@@ -65,12 +110,96 @@ func _find_target() -> void:
 
 
 func _get_move_speed() -> float:
-	return enemy_data.move_speed if enemy_data != null else 100.0
+	return enemy_data.get_move_speed() if enemy_data != null else 100.0
+
+
+func get_max_health() -> float:
+	return enemy_data.get_max_health() if enemy_data != null else max(health, 1.0)
+
+
+func get_display_name() -> String:
+	if enemy_data != null and not enemy_data.display_name.is_empty():
+		return enemy_data.display_name
+	return "敌人"
+
+
+func get_combat_state() -> int:
+	return int(_combat_state)
+
+
+func begin_boss_windup(duration: float) -> void:
+	if not _can_use_boss_skill_state():
+		return
+	_set_combat_state(CombatState.WINDUP, duration)
+
+
+func begin_boss_dash(direction: Vector2, speed: float, duration: float) -> void:
+	if not _can_use_boss_skill_state() or direction == Vector2.ZERO:
+		return
+	_skill_motion_velocity = direction.normalized() * maxf(speed, 0.0)
+	_set_combat_state(CombatState.DASH, duration)
+
+
+func begin_boss_recover(duration: float) -> void:
+	if not _can_use_boss_skill_state():
+		return
+	_set_combat_state(CombatState.RECOVER, duration)
+
+
+func return_to_chase() -> void:
+	if _active_skill_executor != null:
+		_active_skill_executor.finish()
+		_active_skill_executor = null
+	_skill_motion_velocity = Vector2.ZERO
+	_set_combat_state(CombatState.CHASE, 0.0)
+
+
+func get_skill_target() -> Node2D:
+	return _target
+
+
+func get_body_probe_radius() -> float:
+	return _body_probe_radius
+
+
+func get_world_clearance_for_skill(direction: Vector2, distance: float) -> float:
+	return _get_world_clearance(direction, distance)
+
+
+func is_in_skill_windup() -> bool:
+	return _combat_state == CombatState.WINDUP
+
+
+func is_in_skill_dash() -> bool:
+	return _combat_state == CombatState.DASH
+
+
+func is_in_skill_recover() -> bool:
+	return _combat_state == CombatState.RECOVER
+
+
+func advance_skill_state(delta: float) -> bool:
+	_combat_state_remaining -= delta
+	return _combat_state_remaining <= 0.0
+
+
+func move_skill_idle(delta: float) -> void:
+	velocity = _knockback_velocity
+	move_and_slide()
+	_reset_navigation_stuck()
+	_decay_knockback(delta)
+
+
+func move_skill_motion(delta: float, direction: Vector2) -> void:
+	velocity = _skill_motion_velocity + _get_separation_velocity() + _knockback_velocity
+	move_and_slide()
+	_update_navigation_stuck(delta, direction)
+	_decay_knockback(delta)
 
 
 func _get_separation_velocity() -> Vector2:
-	var radius: float = enemy_data.separation_radius if enemy_data != null else 42.0
-	var strength: float = enemy_data.separation_strength if enemy_data != null else 150.0
+	var radius: float = enemy_data.get_separation_radius() if enemy_data != null else 42.0
+	var strength: float = enemy_data.get_separation_strength() if enemy_data != null else 150.0
 	if radius <= 0.0 or strength <= 0.0:
 		return Vector2.ZERO
 
@@ -92,6 +221,232 @@ func _get_separation_velocity() -> Vector2:
 	return push.limit_length(1.0) * strength
 
 
+func _get_navigation_direction(delta_to_target: Vector2, delta: float) -> Vector2:
+	if delta_to_target == Vector2.ZERO:
+		return Vector2.ZERO
+
+	if _detour_remaining > 0.0:
+		_detour_remaining -= delta
+
+	var direct_direction := delta_to_target.normalized()
+	var probe_distance := _get_path_probe_distance(delta_to_target.length())
+	if probe_distance <= 0.0:
+		return direct_direction
+
+	var direct_blocked := _is_world_blocked(direct_direction, probe_distance)
+	var is_stuck := enemy_data != null and _navigation_stuck_time >= enemy_data.get_path_stuck_time()
+	if not direct_blocked and not is_stuck:
+		_detour_direction = 0
+		return direct_direction
+
+	if _detour_direction == 0 or _detour_remaining <= 0.0:
+		_detour_direction = _choose_detour_direction(direct_direction, probe_distance)
+		_detour_remaining = enemy_data.get_path_detour_commit_time() if enemy_data != null else 0.42
+
+	var side_angle := enemy_data.get_path_side_probe_angle() if enemy_data != null else 0.9
+	var side_direction := direct_direction.rotated(side_angle * float(_detour_direction))
+	var avoidance_strength := enemy_data.get_path_avoidance_strength() if enemy_data != null else 1.15
+	return (direct_direction + side_direction * avoidance_strength).normalized()
+
+
+func _get_path_probe_distance(target_distance: float) -> float:
+	var probe_distance := enemy_data.get_path_probe_distance() if enemy_data != null else 144.0
+	var stop_distance := enemy_data.get_stop_distance() if enemy_data != null else 34.0
+	return minf(probe_distance, maxf(target_distance - stop_distance, 0.0))
+
+
+func _choose_detour_direction(direct_direction: Vector2, probe_distance: float) -> int:
+	var side_angle := enemy_data.get_path_side_probe_angle() if enemy_data != null else 0.9
+	var left_direction := direct_direction.rotated(side_angle)
+	var right_direction := direct_direction.rotated(-side_angle)
+	var left_clearance := _get_world_clearance(left_direction, probe_distance)
+	var right_clearance := _get_world_clearance(right_direction, probe_distance)
+	if is_equal_approx(left_clearance, right_clearance):
+		return 1 if int(get_instance_id()) % 2 == 0 else -1
+	return 1 if left_clearance > right_clearance else -1
+
+
+func _has_clear_target_line(delta_to_target: Vector2) -> bool:
+	if delta_to_target == Vector2.ZERO:
+		return true
+	return not _is_world_blocked(delta_to_target.normalized(), delta_to_target.length())
+
+
+func _is_world_blocked(direction: Vector2, distance: float) -> bool:
+	return _get_world_clearance(direction, distance) < distance
+
+
+func _get_world_clearance(direction: Vector2, distance: float) -> float:
+	if direction == Vector2.ZERO or distance <= 0.0:
+		return 0.0
+
+	var normalized_direction := direction.normalized()
+	var nearest_clearance := distance
+	for offset in _get_body_probe_offsets(normalized_direction):
+		nearest_clearance = minf(nearest_clearance, _get_offset_world_clearance(normalized_direction, distance, offset))
+	return nearest_clearance
+
+
+func _get_center_world_clearance(direction: Vector2, distance: float) -> float:
+	if direction == Vector2.ZERO or distance <= 0.0:
+		return 0.0
+	return _get_offset_world_clearance(direction.normalized(), distance, Vector2.ZERO)
+
+
+func _get_offset_world_clearance(direction: Vector2, distance: float, offset: Vector2) -> float:
+	var start := global_position + offset
+	var query := PhysicsRayQueryParameters2D.create(start, start + direction * distance)
+	query.collision_mask = CollisionLayers.WORLD
+	query.exclude = [get_rid()]
+	var hit := get_world_2d().direct_space_state.intersect_ray(query)
+	if hit.is_empty():
+		return distance
+	return start.distance_to(hit["position"])
+
+
+func _get_body_probe_offsets(direction: Vector2) -> Array[Vector2]:
+	var offsets: Array[Vector2] = [Vector2.ZERO]
+	var scaled_radius := _get_scaled_body_probe_radius()
+	if scaled_radius <= 1.0:
+		return offsets
+
+	var side := direction.orthogonal().normalized() * scaled_radius
+	offsets.append(side)
+	offsets.append(-side)
+	return offsets
+
+
+func _get_scaled_body_probe_radius() -> float:
+	var scale := enemy_data.get_path_body_probe_scale() if enemy_data != null else 0.75
+	return _body_probe_radius * maxf(scale, 0.0)
+
+
+func _resolve_body_probe_radius() -> float:
+	if _collision_shape == null or _collision_shape.shape == null:
+		return 0.0
+	if _collision_shape.shape is CircleShape2D:
+		return (_collision_shape.shape as CircleShape2D).radius
+	if _collision_shape.shape is RectangleShape2D:
+		var size := (_collision_shape.shape as RectangleShape2D).size
+		return maxf(size.x, size.y) * 0.5
+	return 0.0
+
+
+func _update_navigation_stuck(delta: float, direction: Vector2) -> void:
+	if direction == Vector2.ZERO or _knockback_velocity.length() > 1.0:
+		_reset_navigation_stuck()
+		return
+
+	var moved_speed := global_position.distance_to(_last_navigation_position) / maxf(delta, 0.001)
+	var stuck_threshold := enemy_data.get_path_stuck_speed_threshold() if enemy_data != null else 12.0
+	if moved_speed <= stuck_threshold:
+		_navigation_stuck_time += delta
+	else:
+		_navigation_stuck_time = 0.0
+	_last_navigation_position = global_position
+
+
+func _reset_navigation_stuck() -> void:
+	_navigation_stuck_time = 0.0
+	_last_navigation_position = global_position
+
+
+func _try_enemy_skill(delta_to_target: Vector2, delta: float) -> void:
+	_update_skill_cooldowns(delta)
+	if enemy_data == null or not enemy_data.get_is_boss():
+		return
+	if _combat_state != CombatState.CHASE:
+		return
+	if delta_to_target == Vector2.ZERO:
+		return
+
+	var skill := _choose_enemy_skill(delta_to_target)
+	if skill == null:
+		return
+	_start_enemy_skill(skill, delta_to_target.normalized())
+
+
+func _update_skill_cooldowns(delta: float) -> void:
+	for id in _skill_cooldowns.keys():
+		_skill_cooldowns[id] = maxf(float(_skill_cooldowns[id]) - delta, 0.0)
+
+
+func _choose_enemy_skill(delta_to_target: Vector2) -> Resource:
+	var pool := enemy_data.get_skill_pool() if enemy_data != null else null
+	if pool == null:
+		return null
+
+	var skills: Array = pool.get("skills")
+	var distance := delta_to_target.length()
+	var direction := delta_to_target.normalized()
+	for skill in skills:
+		if skill == null:
+			continue
+		if float(_skill_cooldowns.get(skill.get("id"), 0.0)) > 0.0:
+			continue
+		if distance < float(skill.get("min_range")) or distance > float(skill.get("max_range")):
+			continue
+		var executor = _find_skill_executor(skill)
+		if executor == null or not executor.can_start(self, skill, direction):
+			continue
+		return skill
+	return null
+
+
+func _start_enemy_skill(skill: Resource, direction: Vector2) -> void:
+	var executor = _find_skill_executor(skill)
+	if executor == null or not executor.can_start(self, skill, direction):
+		return
+	_skill_cooldowns[skill.get("id")] = maxf(float(skill.get("cooldown")), 0.0)
+	_active_skill_executor = executor
+	_active_skill_executor.start(self, skill, direction)
+
+
+func _find_skill_executor(skill: Resource):
+	for executor in _skill_executors:
+		if executor != null and executor.matches(skill):
+			return executor
+	return null
+
+
+func _update_combat_state(delta: float) -> bool:
+	if _combat_state == CombatState.CHASE:
+		return false
+
+	if _active_skill_executor != null:
+		if _active_skill_executor.update(delta):
+			return true
+		_finish_active_skill_executor()
+		return true
+
+	if _combat_state == CombatState.DASH:
+		move_skill_motion(delta, _skill_motion_velocity.normalized())
+	else:
+		move_skill_idle(delta)
+
+	if advance_skill_state(delta):
+		return_to_chase()
+	return true
+
+
+func _finish_active_skill_executor() -> void:
+	if _active_skill_executor != null:
+		_active_skill_executor.finish()
+		_active_skill_executor = null
+	return_to_chase()
+
+
+func _set_combat_state(state: CombatState, duration: float) -> void:
+	_combat_state = state
+	_combat_state_remaining = maxf(duration, 0.0)
+	if state != CombatState.DASH:
+		_skill_motion_velocity = Vector2.ZERO
+
+
+func _can_use_boss_skill_state() -> bool:
+	return enemy_data != null and enemy_data.get_is_boss()
+
+
 func _try_touch_damage() -> void:
 	if _touch_cooldown_remaining > 0.0:
 		return
@@ -100,10 +455,10 @@ func _try_touch_damage() -> void:
 	if player == null:
 		return
 
-	var touch_damage := enemy_data.touch_damage if enemy_data != null else 5.0
+	var touch_damage := enemy_data.get_touch_damage() if enemy_data != null else 5.0
 	player.take_damage(touch_damage)
-	var touch_knockback := enemy_data.touch_knockback if enemy_data != null else 90.0
-	var player_knockback := enemy_data.player_knockback if enemy_data != null else 140.0
+	var touch_knockback := enemy_data.get_touch_knockback() if enemy_data != null else 90.0
+	var player_knockback := enemy_data.get_player_knockback() if enemy_data != null else 140.0
 	var push_direction := player.global_position - global_position
 	if push_direction == Vector2.ZERO:
 		push_direction = -velocity
@@ -111,7 +466,73 @@ func _try_touch_damage() -> void:
 		push_direction = Vector2.RIGHT
 	player.apply_knockback(push_direction, player_knockback)
 	_apply_hit_reaction((global_position - player.global_position).normalized(), touch_knockback)
-	_touch_cooldown_remaining = enemy_data.touch_interval if enemy_data != null else 0.6
+	_touch_cooldown_remaining = enemy_data.get_touch_interval() if enemy_data != null else 0.6
+
+
+func _try_pressure_damage(delta_to_target: Vector2) -> void:
+	if enemy_data == null or enemy_data.get_behavior_type() != EnemyTemplateData.BehaviorType.PRESSURE:
+		return
+	if _pressure_cooldown_remaining > 0.0:
+		return
+	if _pressure_warning_remaining > 0.0:
+		return
+	if delta_to_target.length() > enemy_data.get_pressure_range():
+		return
+	if not _has_clear_target_line(delta_to_target):
+		return
+
+	var player := _target as PlayerController
+	if player == null:
+		return
+
+	_pressure_warning_position = player.global_position
+	_pressure_warning_remaining = enemy_data.get_pressure_warning_duration()
+	_pressure_cooldown_remaining = enemy_data.get_pressure_interval()
+	_spawn_pressure_warning()
+
+
+func _resolve_pressure_warning() -> void:
+	var player := _target as PlayerController
+	if player == null:
+		return
+	var delta_to_player := player.global_position - global_position
+	if not _has_clear_target_line(delta_to_player):
+		return
+	if player.global_position.distance_to(_pressure_warning_position) > enemy_data.get_pressure_radius():
+		return
+
+	_spawn_pressure_impact()
+	player.take_damage(enemy_data.get_pressure_damage())
+	var push_direction := player.global_position - _pressure_warning_position
+	if push_direction == Vector2.ZERO:
+		push_direction = Vector2.RIGHT
+	player.apply_knockback(push_direction, enemy_data.get_pressure_knockback())
+
+
+func _spawn_pressure_warning() -> void:
+	var parent := get_tree().current_scene
+	if parent == null:
+		parent = get_parent()
+	if parent == null:
+		return
+
+	var effect := PressureWarningEffect.new()
+	effect.global_position = _pressure_warning_position
+	parent.add_child(effect)
+	effect.play(enemy_data.get_pressure_radius(), enemy_data.get_pressure_warning_duration(), combat_feedback)
+
+
+func _spawn_pressure_impact() -> void:
+	var parent := get_tree().current_scene
+	if parent == null:
+		parent = get_parent()
+	if parent == null:
+		return
+
+	var effect := PressureImpactEffect.new()
+	effect.global_position = _pressure_warning_position
+	parent.add_child(effect)
+	effect.play(enemy_data.get_pressure_radius(), combat_feedback)
 
 
 func apply_hit_reaction(push_direction: Vector2, force: float) -> void:
@@ -122,7 +543,9 @@ func _apply_hit_reaction(push_direction: Vector2, force: float) -> void:
 	if push_direction == Vector2.ZERO:
 		return
 
-	_knockback_velocity += push_direction.normalized() * force
+	var knockback_mult := enemy_data.get_knockback_taken_mult() if enemy_data != null else 1.0
+	_knockback_velocity += push_direction.normalized() * force * knockback_mult
+	velocity = _knockback_velocity
 
 
 func _decay_knockback(delta: float) -> void:
@@ -144,7 +567,16 @@ func _spawn_damage_number(amount: float) -> void:
 	var damage_number := DamageNumber.new()
 	var spread := float(combat_feedback.get("damage_number_spread"))
 	damage_number.global_position = global_position + Vector2(randf_range(-spread, spread), -28.0)
-	get_tree().current_scene.add_child(damage_number)
+	var damage_number_parent := get_tree().current_scene
+	if damage_number_parent == null:
+		damage_number_parent = get_parent()
+	if damage_number_parent == null:
+		return
+	damage_number_parent.add_child(damage_number)
+	if enemy_data != null and enemy_data.get_is_boss():
+		damage_number.modulate = combat_feedback.get("damage_number_boss_color")
+	elif enemy_data != null and enemy_data.get_is_elite():
+		damage_number.modulate = combat_feedback.get("damage_number_elite_color")
 	damage_number.play(amount, combat_feedback)
 
 
@@ -152,14 +584,14 @@ func _refresh_health_bar() -> void:
 	if _health_bar == null:
 		return
 
-	var max_value: float = enemy_data.max_health if enemy_data != null else max(health, 1.0)
+	var max_value: float = get_max_health()
 	_health_bar.max_value = max_value
 	_health_bar.value = clampf(health, 0.0, max_value)
-	_health_bar.visible = health < max_value and health > 0.0
+	_health_bar.visible = _should_show_overhead_health_bar(max_value)
 
 
 func _die() -> void:
-	var reward := enemy_data.experience_reward if enemy_data != null else 1
+	var reward := enemy_data.get_experience_reward() if enemy_data != null else 1
 	died.emit(reward, global_position)
 
 	set_physics_process(false)
@@ -175,3 +607,11 @@ func _die() -> void:
 	tween.tween_property(_visual, "scale", Vector2.ZERO, float(combat_feedback.get("enemy_death_duration")))
 	tween.parallel().tween_property(_visual, "modulate:a", 0.0, float(combat_feedback.get("enemy_death_duration")))
 	tween.finished.connect(queue_free)
+
+
+func _should_show_overhead_health_bar(max_value: float) -> bool:
+	if enemy_data != null and enemy_data.get_is_boss():
+		return false
+	if enemy_data != null and enemy_data.get_is_elite():
+		return health > 0.0
+	return health < max_value and health > 0.0

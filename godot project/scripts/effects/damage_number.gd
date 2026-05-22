@@ -10,7 +10,8 @@ func play(amount: float, feedback: Resource) -> void:
 	if feedback != null:
 		lifetime = float(feedback.get("damage_number_lifetime"))
 		rise = float(feedback.get("damage_number_rise"))
-		modulate = feedback.get("damage_number_color")
+		if modulate == Color.WHITE:
+			modulate = feedback.get("damage_number_color")
 
 	pivot_offset = size * 0.5
 	var target_position := position + Vector2(0.0, -rise)

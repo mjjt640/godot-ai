@@ -1,18 +1,20 @@
-[gd_resource type="Resource" script_class="EnemyData" load_steps=1 format=3]
+[gd_resource type="Resource" script_class="EnemyData" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://resources/enemies/enemy_data.gd" id="1_enemy"]
+[ext_resource type="Resource" path="res://resources/enemies/templates/enemy_template_normal.tres" id="2_template"]
 
 [resource]
 script = ExtResource("1_enemy")
 id = &"enemy_fast"
 display_name = "迅捷敌人"
-max_health = 12.0
-move_speed = 165.0
+template = ExtResource("2_template")
+max_health = 10.0
+move_speed = 178.0
 touch_damage = 6.0
 touch_knockback = 75.0
 player_knockback = 125.0
 stop_distance = 30.0
 separation_radius = 38.0
 separation_strength = 170.0
-touch_interval = 0.45
+touch_interval = 0.42
 experience_reward = 1

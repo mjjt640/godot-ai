@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="EnemyTemplateData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/enemies/enemy_template_data.gd" id="1_template"]
+
+[resource]
+script = ExtResource("1_template")
+behavior_type = 0
+is_elite = true
+max_health = 150.0
+move_speed = 82.0
+touch_damage = 18.0
+touch_knockback = 150.0
+player_knockback = 220.0
+stop_distance = 46.0
+separation_radius = 72.0
+separation_strength = 170.0
+touch_interval = 0.72
+experience_reward = 10
+path_probe_distance = 160.0
+path_side_probe_angle = 0.85
+path_avoidance_strength = 1.1
+path_body_probe_scale = 0.8
+path_stuck_speed_threshold = 10.0
+path_stuck_time = 0.24
+path_detour_commit_time = 0.5
+pressure_interval = 1.0
+pressure_radius = 48.0
+knockback_taken_mult = 1.0

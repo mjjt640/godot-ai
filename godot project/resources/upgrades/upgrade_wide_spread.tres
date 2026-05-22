@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="UpgradeOptionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/upgrades/upgrade_option_data.gd" id="1_upgrade"]
+
+[resource]
+script = ExtResource("1_upgrade")
+id = &"upgrade_wide_spread"
+display_name = "宽幅散射"
+description = "散射模块获得更远射程。"
+upgrade_type = 1
+rarity = 2
+weight = 0.85
+stat_modifiers = {
+&"attack_range_add": 150.0
+}
+required_module_ids = Array[StringName]([&"spread_fire"])

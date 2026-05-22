@@ -1,12 +1,13 @@
-[gd_resource type="Resource" script_class="WaveEntryData" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="WaveEntryData" load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://resources/waves/wave_entry_data.gd" id="1_wave"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/enemy_basic.tscn" id="2_basic"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/enemy_swarm.tscn" id="3_swarm"]
 
 [resource]
 script = ExtResource("1_wave")
 start_time = 0.0
-spawn_interval = 0.92
+spawn_interval = 0.88
 spawn_batch_size = 2
-max_alive_enemies = 12
-enemy_scenes = Array[PackedScene]([ExtResource("2_basic"), ExtResource("2_basic"), ExtResource("2_basic")])
+max_alive_enemies = 14
+enemy_scenes = Array[PackedScene]([ExtResource("2_basic"), ExtResource("2_basic"), ExtResource("2_basic"), ExtResource("3_swarm")])

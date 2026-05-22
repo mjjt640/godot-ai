@@ -1,13 +1,15 @@
-[gd_resource type="Resource" script_class="EnemyData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="EnemyData" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://resources/enemies/enemy_data.gd" id="1_enemy"]
+[ext_resource type="Resource" path="res://resources/enemies/templates/enemy_template_elite.tres" id="2_template"]
 
 [resource]
 script = ExtResource("1_enemy")
 id = &"enemy_elite_brute"
 display_name = "精英重击者"
+template = ExtResource("2_template")
 is_elite = true
-max_health = 140.0
+max_health = 165.0
 move_speed = 82.0
 touch_damage = 18.0
 touch_knockback = 150.0
@@ -16,4 +18,4 @@ stop_distance = 46.0
 separation_radius = 72.0
 separation_strength = 170.0
 touch_interval = 0.72
-experience_reward = 8
+experience_reward = 12

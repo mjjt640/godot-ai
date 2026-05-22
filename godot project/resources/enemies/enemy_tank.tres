@@ -1,18 +1,20 @@
-[gd_resource type="Resource" script_class="EnemyData" load_steps=1 format=3]
+[gd_resource type="Resource" script_class="EnemyData" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://resources/enemies/enemy_data.gd" id="1_enemy"]
+[ext_resource type="Resource" path="res://resources/enemies/templates/enemy_template_normal.tres" id="2_template"]
 
 [resource]
 script = ExtResource("1_enemy")
 id = &"enemy_tank"
 display_name = "重甲敌人"
-max_health = 55.0
-move_speed = 65.0
-touch_damage = 14.0
+template = ExtResource("2_template")
+max_health = 64.0
+move_speed = 58.0
+touch_damage = 16.0
 touch_knockback = 120.0
 player_knockback = 185.0
 stop_distance = 42.0
 separation_radius = 58.0
 separation_strength = 135.0
 touch_interval = 0.8
-experience_reward = 3
+experience_reward = 4

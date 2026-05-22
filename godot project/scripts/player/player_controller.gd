@@ -17,6 +17,7 @@ signal health_changed(current_health: float, max_health: float)
 @export var crit_damage_mult: float = 1.5
 @export var knockback_decay: float = 1800.0
 @export var max_knockback_speed: float = 420.0
+@export var combat_feedback: Resource = preload("res://resources/combat/default_combat_feedback.tres")
 
 var health: float
 var _knockback_velocity: Vector2 = Vector2.ZERO
@@ -26,6 +27,7 @@ var _xp_magnet_radius_add: float = 0.0
 var _xp_magnet_radius_mult: float = 1.0
 var _luck_add: float = 0.0
 var _luck_mult: float = 1.0
+@onready var _visual: CanvasItem = get_node_or_null("Visual") as CanvasItem
 
 
 func _ready() -> void:
@@ -68,6 +70,7 @@ func _physics_process(_delta: float) -> void:
 func take_damage(amount: float) -> void:
 	health = max(health - amount, 0.0)
 	health_changed.emit(health, max_health)
+	_play_hit_feedback()
 	if health <= 0.0:
 		died.emit()
 
@@ -118,3 +121,12 @@ func apply_knockback(direction: Vector2, force: float) -> void:
 
 	_knockback_velocity += direction.normalized() * force
 	_knockback_velocity = _knockback_velocity.limit_length(max_knockback_speed)
+
+
+func _play_hit_feedback() -> void:
+	if _visual == null or combat_feedback == null:
+		return
+
+	_visual.modulate = combat_feedback.get("player_hit_flash_color")
+	var tween := create_tween()
+	tween.tween_property(_visual, "modulate", Color.WHITE, float(combat_feedback.get("player_hit_flash_duration")))

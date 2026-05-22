@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="UpgradeOptionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/upgrades/upgrade_option_data.gd" id="1_upgrade"]
+
+[resource]
+script = ExtResource("1_upgrade")
+id = &"upgrade_xp_magnet_focus_epic"
+display_name = "磁场聚焦"
+description = "大幅放大已有经验吸附范围。"
+upgrade_type = 2
+rarity = 2
+weight = 0.75
+general_modifiers = {
+&"xp_magnet_radius_mult": 1.22
+}

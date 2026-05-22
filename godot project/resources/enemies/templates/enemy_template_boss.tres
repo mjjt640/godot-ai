@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="EnemyTemplateData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://resources/enemies/enemy_template_data.gd" id="1_template"]
+[ext_resource type="Resource" path="res://resources/enemies/skill_pools/boss_overseer_skill_pool.tres" id="2_skill_pool"]
+
+[resource]
+script = ExtResource("1_template")
+behavior_type = 4
+is_boss = true
+max_health = 720.0
+move_speed = 58.0
+touch_damage = 24.0
+touch_knockback = 180.0
+player_knockback = 280.0
+stop_distance = 58.0
+separation_radius = 110.0
+separation_strength = 220.0
+touch_interval = 0.95
+experience_reward = 30
+skill_pool = ExtResource("2_skill_pool")
+path_probe_distance = 180.0
+path_side_probe_angle = 0.8
+path_avoidance_strength = 1.0
+path_body_probe_scale = 0.9
+path_stuck_speed_threshold = 8.0
+path_stuck_time = 0.28
+path_detour_commit_time = 0.58
+pressure_interval = 1.0
+pressure_radius = 64.0
+knockback_taken_mult = 0.65

@@ -10,12 +10,19 @@ const GameText = preload("res://scripts/ui/game_text.gd")
 @onready var _health_bar: ProgressBar = %HealthBar
 @onready var _fire_mode_label: Label = %FireModeLabel
 @onready var _payload_label: Label = %PayloadLabel
+@onready var _run_time_label: Label = %RunTimeLabel
+@onready var _objective_label: Label = %ObjectiveLabel
+@onready var _next_event_label: Label = %NextEventLabel
+@onready var _boss_health_panel: Control = %BossHealthPanel
+@onready var _boss_health_label: Label = %BossHealthLabel
+@onready var _boss_health_bar: ProgressBar = %BossHealthBar
 @onready var _game_over_panel: Control = %GameOverPanel
 @onready var _game_over_label: Label = %GameOverLabel
 
 var _build_state: BuildState
 var _xp_manager: XPManager
 var _player: PlayerController
+var _tracked_boss: EnemyController
 
 
 func bind(build_state: BuildState, xp_manager: XPManager, player: PlayerController) -> void:
@@ -34,6 +41,25 @@ func bind(build_state: BuildState, xp_manager: XPManager, player: PlayerControll
 		_player.died.connect(_on_player_died)
 		_on_health_changed(_player.health, _player.max_health)
 		_character_label.text = GameText.hud_character(_player.character_data)
+
+
+func update_run_status(elapsed_seconds: float, objective: Resource) -> void:
+	_run_time_label.text = GameText.hud_run_time(elapsed_seconds)
+	_objective_label.text = GameText.hud_run_objective(objective)
+	_next_event_label.text = GameText.hud_next_event(elapsed_seconds, objective)
+
+
+func track_boss(boss: EnemyController) -> void:
+	_tracked_boss = boss
+	if _tracked_boss == null:
+		_boss_health_panel.visible = false
+		return
+
+	_boss_health_panel.visible = true
+	_boss_health_label.text = _tracked_boss.get_display_name()
+	_on_boss_health_changed(_tracked_boss.health, _tracked_boss.get_max_health())
+	_tracked_boss.health_changed.connect(_on_boss_health_changed)
+	_tracked_boss.died.connect(func(_experience_reward: int, _death_position: Vector2) -> void: _boss_health_panel.visible = false)
 
 
 func _on_modules_changed(modules_by_slot: Dictionary) -> void:
@@ -66,3 +92,8 @@ func show_game_over() -> void:
 func show_victory() -> void:
 	_game_over_panel.visible = true
 	_game_over_label.text = GameText.victory()
+
+
+func _on_boss_health_changed(current_health: float, max_health: float) -> void:
+	_boss_health_bar.max_value = max_health
+	_boss_health_bar.value = clampf(current_health, 0.0, max_health)

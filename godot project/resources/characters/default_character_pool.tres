@@ -1,9 +1,11 @@
-[gd_resource type="Resource" script_class="CharacterPoolData" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="CharacterPoolData" load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://resources/characters/character_pool_data.gd" id="1_pool"]
 [ext_resource type="Resource" path="res://resources/characters/character_core_runner.tres" id="2_core_runner"]
+[ext_resource type="Resource" path="res://resources/characters/character_spark_scout.tres" id="3_spark_scout"]
+[ext_resource type="Resource" path="res://resources/characters/character_ember_marksman.tres" id="4_ember_marksman"]
 
 [resource]
 script = ExtResource("1_pool")
-characters = Array[Resource]([ExtResource("2_core_runner")])
+characters = Array[Resource]([ExtResource("2_core_runner"), ExtResource("3_spark_scout"), ExtResource("4_ember_marksman")])
 default_character_id = &"core_runner"

@@ -8,7 +8,7 @@
 [sub_resource type="Resource" id="Resource_elite"]
 script = ExtResource("2_event")
 id = &"elite_brute_wave"
-trigger_time = 75.0
+trigger_time = 70.0
 event_type = 0
 enemy_scene = ExtResource("3_elite")
 spawn_count = 2
@@ -16,7 +16,7 @@ spawn_count = 2
 [sub_resource type="Resource" id="Resource_boss"]
 script = ExtResource("2_event")
 id = &"boss_overseer"
-trigger_time = 180.0
+trigger_time = 175.0
 event_type = 1
 enemy_scene = ExtResource("4_boss")
 spawn_count = 1

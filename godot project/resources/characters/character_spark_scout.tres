@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="CharacterData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://resources/characters/character_data.gd" id="1_character"]
+[ext_resource type="Resource" path="res://resources/modules/fire_quick_single.tres" id="2_fire"]
+[ext_resource type="Resource" path="res://resources/modules/payload_normal.tres" id="3_payload"]
+
+[resource]
+script = ExtResource("1_character")
+id = &"spark_scout"
+display_name = "疾电斥候"
+description = "移动速度和攻速更高，但生命较低，适合主动拉扯敌群。"
+move_speed = 305.0
+max_health = 82.0
+xp_magnet_radius = 135.0
+luck = 0.02
+attack_speed = 1.16
+attack_range = 720.0
+crit_chance = 0.06
+crit_damage_mult = 1.45
+starting_fire_module = ExtResource("2_fire")
+starting_payload_module = ExtResource("3_payload")

@@ -29,6 +29,31 @@ static func hud_payload(module: ModuleData) -> String:
 	return _hud_module("弹头", module)
 
 
+static func hud_run_time(elapsed_seconds: float) -> String:
+	return "时间 %s" % format_time(elapsed_seconds)
+
+
+static func hud_run_objective(_objective: Resource) -> String:
+	return "目标：撑到压制核心出现并击破它"
+
+
+static func hud_next_event(elapsed_seconds: float, objective: Resource) -> String:
+	var next_event: Resource = _next_objective_event(elapsed_seconds, objective)
+	if next_event != null:
+		var remaining: float = max(float(next_event.get("trigger_time")) - elapsed_seconds, 0.0)
+		return "%s：%s后" % [_objective_event_name(next_event), format_time(remaining)]
+
+	var boss_event: Resource = _last_boss_event(objective)
+	if boss_event != null and elapsed_seconds >= float(boss_event.get("trigger_time")):
+		return "压制核心已出现"
+	return "目标事件已清空"
+
+
+static func format_time(seconds: float) -> String:
+	var whole_seconds: int = max(int(floor(seconds)), 0)
+	return "%02d:%02d" % [whole_seconds / 60, whole_seconds % 60]
+
+
 static func game_over() -> String:
 	return "游戏结束"
 
@@ -235,3 +260,37 @@ static func _format_mult_bonus_percent(value: Variant) -> String:
 
 static func _hud_module(prefix: String, module: ModuleData) -> String:
 	return "%s：%s" % [prefix, module_name(module)]
+
+
+static func _next_objective_event(elapsed_seconds: float, objective: Resource) -> Resource:
+	if objective == null:
+		return null
+
+	var events: Array = objective.get("events")
+	for event in events:
+		if event != null and elapsed_seconds < float(event.get("trigger_time")):
+			return event
+	return null
+
+
+static func _last_boss_event(objective: Resource) -> Resource:
+	if objective == null:
+		return null
+
+	var boss_event: Resource
+	var events: Array = objective.get("events")
+	for event in events:
+		if event != null and int(event.get("event_type")) == 1:
+			boss_event = event
+	return boss_event
+
+
+static func _objective_event_name(event: Resource) -> String:
+	if event == null:
+		return "目标"
+	match int(event.get("event_type")):
+		0:
+			return "精英来袭"
+		1:
+			return "Boss 压制核心"
+	return "目标事件"

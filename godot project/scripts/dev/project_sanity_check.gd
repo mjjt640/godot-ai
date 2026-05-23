@@ -46,6 +46,7 @@ func _run() -> void:
 	_check_enemy_soft_separation()
 	_check_enemy_obstacle_navigation()
 	_check_enemy_skill_executor_split()
+	_check_enemy_behavior_executor_split()
 	_check_boss_wide_body_navigation_and_state()
 	_check_health_bar_ui()
 	_check_hud_run_objective_ui()
@@ -229,8 +230,9 @@ func _check_combat_feedback_readability_hooks() -> void:
 	var enemy_source := FileAccess.get_file_as_string("res://scripts/game/enemy_controller.gd")
 	_expect(enemy_source.find("damage_number_boss_color") >= 0, "EnemyController should use boss damage number feedback")
 	_expect(enemy_source.find("damage_number_elite_color") >= 0, "EnemyController should use elite damage number feedback")
-	_expect(enemy_source.find("PressureWarningEffect") >= 0, "EnemyController should spawn pressure warning effects")
-	_expect(enemy_source.find("PressureImpactEffect") >= 0, "EnemyController should spawn pressure impact effects")
+	var pressure_executor_source := FileAccess.get_file_as_string("res://scripts/game/pressure_enemy_behavior_executor.gd")
+	_expect(pressure_executor_source.find("PressureWarningEffect") >= 0, "PressureEnemyBehaviorExecutor should spawn pressure warning effects")
+	_expect(pressure_executor_source.find("PressureImpactEffect") >= 0, "PressureEnemyBehaviorExecutor should spawn pressure impact effects")
 
 	var warning_source := FileAccess.get_file_as_string("res://scripts/effects/pressure_warning_effect.gd")
 	_expect(warning_source.find("draw_line") >= 0, "Pressure warning effect should draw a center marker")
@@ -420,6 +422,34 @@ func _check_enemy_skill_executor_split() -> void:
 		_expect(dash_executor_source.find("DashEnemySkillData") >= 0, "DashSkillExecutor should own dash skill data matching")
 		_expect(dash_executor_source.find("BossDashWarningEffect") >= 0, "DashSkillExecutor should own dash warning effects")
 		_expect(dash_executor_source.find("take_damage") >= 0, "DashSkillExecutor should own dash hit damage")
+
+
+func _check_enemy_behavior_executor_split() -> void:
+	var base_executor_path := "res://scripts/game/enemy_behavior_executor.gd"
+	var pressure_executor_path := "res://scripts/game/pressure_enemy_behavior_executor.gd"
+	_expect(FileAccess.file_exists(base_executor_path), "EnemyBehaviorExecutor base script should own the common behavior executor contract")
+	_expect(FileAccess.file_exists(pressure_executor_path), "PressureEnemyBehaviorExecutor should own PRESSURE enemy behavior")
+
+	var enemy_source := FileAccess.get_file_as_string("res://scripts/game/enemy_controller.gd")
+	_expect(enemy_source.find("_behavior_executors") >= 0, "EnemyController should route enemy behaviors through an executor list")
+	_expect(enemy_source.find("PressureWarningEffect") == -1, "EnemyController should not spawn pressure warning effects directly")
+	_expect(enemy_source.find("PressureImpactEffect") == -1, "EnemyController should not spawn pressure impact effects directly")
+	_expect(enemy_source.find("_pressure_warning_remaining") == -1, "EnemyController should not own pressure warning state")
+	_expect(enemy_source.find("_try_pressure_damage") == -1, "EnemyController should not contain pressure behavior implementation details")
+	_expect(enemy_source.find("_resolve_pressure_warning") == -1, "EnemyController should not contain pressure warning resolution details")
+
+	if FileAccess.file_exists(base_executor_path):
+		var base_executor_source := FileAccess.get_file_as_string(base_executor_path)
+		_expect(base_executor_source.find("func matches(") >= 0, "EnemyBehaviorExecutor should expose matches")
+		_expect(base_executor_source.find("func update(") >= 0, "EnemyBehaviorExecutor should expose update")
+		_expect(base_executor_source.find("func reset(") >= 0, "EnemyBehaviorExecutor should expose reset")
+
+	if FileAccess.file_exists(pressure_executor_path):
+		var pressure_executor_source := FileAccess.get_file_as_string(pressure_executor_path)
+		_expect(pressure_executor_source.find("extends \"res://scripts/game/enemy_behavior_executor.gd\"") >= 0, "PressureEnemyBehaviorExecutor should inherit the common behavior contract")
+		_expect(pressure_executor_source.find("PressureWarningEffect") >= 0, "PressureEnemyBehaviorExecutor should own pressure warning effects")
+		_expect(pressure_executor_source.find("PressureImpactEffect") >= 0, "PressureEnemyBehaviorExecutor should own pressure impact effects")
+		_expect(pressure_executor_source.find("take_damage") >= 0, "PressureEnemyBehaviorExecutor should own pressure delayed damage")
 
 
 func _check_boss_wide_body_navigation_and_state() -> void:

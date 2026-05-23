@@ -3,10 +3,8 @@ extends CharacterBody2D
 
 const CollisionLayers = preload("res://scripts/config/collision_layers.gd")
 const DamageNumber = preload("res://scripts/effects/damage_number.gd")
-const EnemyTemplateData = preload("res://resources/enemies/enemy_template_data.gd")
 const DashSkillExecutor = preload("res://scripts/game/dash_skill_executor.gd")
-const PressureImpactEffect = preload("res://scripts/effects/pressure_impact_effect.gd")
-const PressureWarningEffect = preload("res://scripts/effects/pressure_warning_effect.gd")
+const PressureEnemyBehaviorExecutor = preload("res://scripts/game/pressure_enemy_behavior_executor.gd")
 
 signal died(experience_reward: int, death_position: Vector2)
 signal health_changed(current_health: float, max_health: float)
@@ -24,9 +22,6 @@ enum CombatState {
 var health: float = 1.0
 var _target: Node2D
 var _touch_cooldown_remaining: float = 0.0
-var _pressure_cooldown_remaining: float = 0.0
-var _pressure_warning_remaining: float = 0.0
-var _pressure_warning_position: Vector2 = Vector2.ZERO
 var _knockback_velocity: Vector2 = Vector2.ZERO
 var _last_navigation_position: Vector2 = Vector2.ZERO
 var _navigation_stuck_time: float = 0.0
@@ -39,6 +34,7 @@ var _skill_motion_velocity: Vector2 = Vector2.ZERO
 var _skill_cooldowns: Dictionary = {}
 var _skill_executors: Array = []
 var _active_skill_executor
+var _behavior_executors: Array = []
 @onready var _visual: Node2D = get_node_or_null("Visual") as Node2D
 @onready var _health_bar: ProgressBar = get_node_or_null("HealthBar") as ProgressBar
 @onready var _collision_shape: CollisionShape2D = get_node_or_null("CollisionShape2D") as CollisionShape2D
@@ -51,6 +47,7 @@ func _ready() -> void:
 	if enemy_data != null:
 		health = enemy_data.get_max_health()
 	_skill_executors = [DashSkillExecutor.new()]
+	_behavior_executors = [PressureEnemyBehaviorExecutor.new()]
 	_body_probe_radius = _resolve_body_probe_radius()
 	_last_navigation_position = global_position
 	_refresh_health_bar()
@@ -64,17 +61,11 @@ func _physics_process(_delta: float) -> void:
 
 	if _touch_cooldown_remaining > 0.0:
 		_touch_cooldown_remaining -= _delta
-	if _pressure_cooldown_remaining > 0.0:
-		_pressure_cooldown_remaining -= _delta
-	if _pressure_warning_remaining > 0.0:
-		_pressure_warning_remaining -= _delta
-		if _pressure_warning_remaining <= 0.0:
-			_resolve_pressure_warning()
 	if _update_combat_state(_delta):
 		return
 
 	var delta_to_target := _target.global_position - global_position
-	_try_pressure_damage(delta_to_target)
+	_update_behavior_executors(delta_to_target, _delta)
 	_try_enemy_skill(delta_to_target, _delta)
 	if _combat_state != CombatState.CHASE:
 		return
@@ -164,6 +155,14 @@ func get_body_probe_radius() -> float:
 
 func get_world_clearance_for_skill(direction: Vector2, distance: float) -> float:
 	return _get_world_clearance(direction, distance)
+
+
+func get_behavior_target() -> Node2D:
+	return _target
+
+
+func has_clear_target_line_for_behavior(delta_to_target: Vector2) -> bool:
+	return _has_clear_target_line(delta_to_target)
 
 
 func is_in_skill_windup() -> bool:
@@ -351,6 +350,14 @@ func _reset_navigation_stuck() -> void:
 	_last_navigation_position = global_position
 
 
+func _update_behavior_executors(delta_to_target: Vector2, delta: float) -> void:
+	if enemy_data == null:
+		return
+	for executor in _behavior_executors:
+		if executor != null and executor.matches(enemy_data):
+			executor.update(self, delta_to_target, delta)
+
+
 func _try_enemy_skill(delta_to_target: Vector2, delta: float) -> void:
 	_update_skill_cooldowns(delta)
 	if enemy_data == null or not enemy_data.get_is_boss():
@@ -467,72 +474,6 @@ func _try_touch_damage() -> void:
 	player.apply_knockback(push_direction, player_knockback)
 	_apply_hit_reaction((global_position - player.global_position).normalized(), touch_knockback)
 	_touch_cooldown_remaining = enemy_data.get_touch_interval() if enemy_data != null else 0.6
-
-
-func _try_pressure_damage(delta_to_target: Vector2) -> void:
-	if enemy_data == null or enemy_data.get_behavior_type() != EnemyTemplateData.BehaviorType.PRESSURE:
-		return
-	if _pressure_cooldown_remaining > 0.0:
-		return
-	if _pressure_warning_remaining > 0.0:
-		return
-	if delta_to_target.length() > enemy_data.get_pressure_range():
-		return
-	if not _has_clear_target_line(delta_to_target):
-		return
-
-	var player := _target as PlayerController
-	if player == null:
-		return
-
-	_pressure_warning_position = player.global_position
-	_pressure_warning_remaining = enemy_data.get_pressure_warning_duration()
-	_pressure_cooldown_remaining = enemy_data.get_pressure_interval()
-	_spawn_pressure_warning()
-
-
-func _resolve_pressure_warning() -> void:
-	var player := _target as PlayerController
-	if player == null:
-		return
-	var delta_to_player := player.global_position - global_position
-	if not _has_clear_target_line(delta_to_player):
-		return
-	if player.global_position.distance_to(_pressure_warning_position) > enemy_data.get_pressure_radius():
-		return
-
-	_spawn_pressure_impact()
-	player.take_damage(enemy_data.get_pressure_damage())
-	var push_direction := player.global_position - _pressure_warning_position
-	if push_direction == Vector2.ZERO:
-		push_direction = Vector2.RIGHT
-	player.apply_knockback(push_direction, enemy_data.get_pressure_knockback())
-
-
-func _spawn_pressure_warning() -> void:
-	var parent := get_tree().current_scene
-	if parent == null:
-		parent = get_parent()
-	if parent == null:
-		return
-
-	var effect := PressureWarningEffect.new()
-	effect.global_position = _pressure_warning_position
-	parent.add_child(effect)
-	effect.play(enemy_data.get_pressure_radius(), enemy_data.get_pressure_warning_duration(), combat_feedback)
-
-
-func _spawn_pressure_impact() -> void:
-	var parent := get_tree().current_scene
-	if parent == null:
-		parent = get_parent()
-	if parent == null:
-		return
-
-	var effect := PressureImpactEffect.new()
-	effect.global_position = _pressure_warning_position
-	parent.add_child(effect)
-	effect.play(enemy_data.get_pressure_radius(), combat_feedback)
 
 
 func apply_hit_reaction(push_direction: Vector2, force: float) -> void:

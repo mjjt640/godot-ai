@@ -427,21 +427,30 @@ func _check_enemy_skill_executor_split() -> void:
 func _check_enemy_behavior_executor_split() -> void:
 	var base_executor_path := "res://scripts/game/enemy_behavior_executor.gd"
 	var pressure_executor_path := "res://scripts/game/pressure_enemy_behavior_executor.gd"
+	var touch_executor_path := "res://scripts/game/touch_damage_behavior_executor.gd"
 	_expect(FileAccess.file_exists(base_executor_path), "EnemyBehaviorExecutor base script should own the common behavior executor contract")
 	_expect(FileAccess.file_exists(pressure_executor_path), "PressureEnemyBehaviorExecutor should own PRESSURE enemy behavior")
+	_expect(FileAccess.file_exists(touch_executor_path), "TouchDamageBehaviorExecutor should own enemy contact damage")
 
 	var enemy_source := FileAccess.get_file_as_string("res://scripts/game/enemy_controller.gd")
 	_expect(enemy_source.find("_behavior_executors") >= 0, "EnemyController should route enemy behaviors through an executor list")
+	_expect(enemy_source.find("TouchDamageBehaviorExecutor") >= 0, "EnemyController should register touch damage behavior through an executor")
 	_expect(enemy_source.find("PressureWarningEffect") == -1, "EnemyController should not spawn pressure warning effects directly")
 	_expect(enemy_source.find("PressureImpactEffect") == -1, "EnemyController should not spawn pressure impact effects directly")
 	_expect(enemy_source.find("_pressure_warning_remaining") == -1, "EnemyController should not own pressure warning state")
 	_expect(enemy_source.find("_try_pressure_damage") == -1, "EnemyController should not contain pressure behavior implementation details")
 	_expect(enemy_source.find("_resolve_pressure_warning") == -1, "EnemyController should not contain pressure warning resolution details")
+	_expect(enemy_source.find("_touch_cooldown_remaining") == -1, "EnemyController should not own touch damage cooldown state")
+	_expect(enemy_source.find("_try_touch_damage") == -1, "EnemyController should not contain touch damage implementation details")
+	_expect(enemy_source.find("get_touch_damage") == -1, "EnemyController should not read touch damage values directly")
+	_expect(enemy_source.find("get_player_knockback") == -1, "EnemyController should not read touch player knockback directly")
 
 	if FileAccess.file_exists(base_executor_path):
 		var base_executor_source := FileAccess.get_file_as_string(base_executor_path)
 		_expect(base_executor_source.find("func matches(") >= 0, "EnemyBehaviorExecutor should expose matches")
+		_expect(base_executor_source.find("func tick(") >= 0, "EnemyBehaviorExecutor should expose tick")
 		_expect(base_executor_source.find("func update(") >= 0, "EnemyBehaviorExecutor should expose update")
+		_expect(base_executor_source.find("func update_contact(") >= 0, "EnemyBehaviorExecutor should expose update_contact")
 		_expect(base_executor_source.find("func reset(") >= 0, "EnemyBehaviorExecutor should expose reset")
 
 	if FileAccess.file_exists(pressure_executor_path):
@@ -450,6 +459,15 @@ func _check_enemy_behavior_executor_split() -> void:
 		_expect(pressure_executor_source.find("PressureWarningEffect") >= 0, "PressureEnemyBehaviorExecutor should own pressure warning effects")
 		_expect(pressure_executor_source.find("PressureImpactEffect") >= 0, "PressureEnemyBehaviorExecutor should own pressure impact effects")
 		_expect(pressure_executor_source.find("take_damage") >= 0, "PressureEnemyBehaviorExecutor should own pressure delayed damage")
+
+	if FileAccess.file_exists(touch_executor_path):
+		var touch_executor_source := FileAccess.get_file_as_string(touch_executor_path)
+		_expect(touch_executor_source.find("extends \"res://scripts/game/enemy_behavior_executor.gd\"") >= 0, "TouchDamageBehaviorExecutor should inherit the common behavior contract")
+		_expect(touch_executor_source.find("_cooldown_remaining") >= 0, "TouchDamageBehaviorExecutor should own touch cooldown state")
+		_expect(touch_executor_source.find("get_touch_damage") >= 0, "TouchDamageBehaviorExecutor should own touch damage values")
+		_expect(touch_executor_source.find("get_touch_knockback") >= 0, "TouchDamageBehaviorExecutor should own enemy touch hit reaction")
+		_expect(touch_executor_source.find("get_player_knockback") >= 0, "TouchDamageBehaviorExecutor should own player touch knockback")
+		_expect(touch_executor_source.find("get_touch_interval") >= 0, "TouchDamageBehaviorExecutor should own touch cooldown duration")
 
 
 func _check_boss_wide_body_navigation_and_state() -> void:

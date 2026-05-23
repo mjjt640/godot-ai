@@ -5,6 +5,7 @@ const CollisionLayers = preload("res://scripts/config/collision_layers.gd")
 const DamageNumber = preload("res://scripts/effects/damage_number.gd")
 const DashSkillExecutor = preload("res://scripts/game/dash_skill_executor.gd")
 const PressureEnemyBehaviorExecutor = preload("res://scripts/game/pressure_enemy_behavior_executor.gd")
+const TouchDamageBehaviorExecutor = preload("res://scripts/game/touch_damage_behavior_executor.gd")
 
 signal died(experience_reward: int, death_position: Vector2)
 signal health_changed(current_health: float, max_health: float)
@@ -21,7 +22,6 @@ enum CombatState {
 
 var health: float = 1.0
 var _target: Node2D
-var _touch_cooldown_remaining: float = 0.0
 var _knockback_velocity: Vector2 = Vector2.ZERO
 var _last_navigation_position: Vector2 = Vector2.ZERO
 var _navigation_stuck_time: float = 0.0
@@ -47,7 +47,7 @@ func _ready() -> void:
 	if enemy_data != null:
 		health = enemy_data.get_max_health()
 	_skill_executors = [DashSkillExecutor.new()]
-	_behavior_executors = [PressureEnemyBehaviorExecutor.new()]
+	_behavior_executors = [TouchDamageBehaviorExecutor.new(), PressureEnemyBehaviorExecutor.new()]
 	_body_probe_radius = _resolve_body_probe_radius()
 	_last_navigation_position = global_position
 	_refresh_health_bar()
@@ -59,8 +59,7 @@ func _physics_process(_delta: float) -> void:
 		_find_target()
 		return
 
-	if _touch_cooldown_remaining > 0.0:
-		_touch_cooldown_remaining -= _delta
+	_tick_behavior_executors(_delta)
 	if _update_combat_state(_delta):
 		return
 
@@ -71,7 +70,7 @@ func _physics_process(_delta: float) -> void:
 		return
 	var stop_distance := enemy_data.get_stop_distance() if enemy_data != null else 34.0
 	if delta_to_target.length() <= stop_distance and _has_clear_target_line(delta_to_target):
-		_try_touch_damage()
+		_update_contact_behavior_executors(delta_to_target)
 		velocity = _get_separation_velocity() + _knockback_velocity
 		move_and_slide()
 		_reset_navigation_stuck()
@@ -358,6 +357,22 @@ func _update_behavior_executors(delta_to_target: Vector2, delta: float) -> void:
 			executor.update(self, delta_to_target, delta)
 
 
+func _tick_behavior_executors(delta: float) -> void:
+	if enemy_data == null:
+		return
+	for executor in _behavior_executors:
+		if executor != null and executor.matches(enemy_data):
+			executor.tick(self, delta)
+
+
+func _update_contact_behavior_executors(delta_to_target: Vector2) -> void:
+	if enemy_data == null:
+		return
+	for executor in _behavior_executors:
+		if executor != null and executor.matches(enemy_data):
+			executor.update_contact(self, delta_to_target)
+
+
 func _try_enemy_skill(delta_to_target: Vector2, delta: float) -> void:
 	_update_skill_cooldowns(delta)
 	if enemy_data == null or not enemy_data.get_is_boss():
@@ -452,28 +467,6 @@ func _set_combat_state(state: CombatState, duration: float) -> void:
 
 func _can_use_boss_skill_state() -> bool:
 	return enemy_data != null and enemy_data.get_is_boss()
-
-
-func _try_touch_damage() -> void:
-	if _touch_cooldown_remaining > 0.0:
-		return
-
-	var player := _target as PlayerController
-	if player == null:
-		return
-
-	var touch_damage := enemy_data.get_touch_damage() if enemy_data != null else 5.0
-	player.take_damage(touch_damage)
-	var touch_knockback := enemy_data.get_touch_knockback() if enemy_data != null else 90.0
-	var player_knockback := enemy_data.get_player_knockback() if enemy_data != null else 140.0
-	var push_direction := player.global_position - global_position
-	if push_direction == Vector2.ZERO:
-		push_direction = -velocity
-	if push_direction == Vector2.ZERO:
-		push_direction = Vector2.RIGHT
-	player.apply_knockback(push_direction, player_knockback)
-	_apply_hit_reaction((global_position - player.global_position).normalized(), touch_knockback)
-	_touch_cooldown_remaining = enemy_data.get_touch_interval() if enemy_data != null else 0.6
 
 
 func apply_hit_reaction(push_direction: Vector2, force: float) -> void:

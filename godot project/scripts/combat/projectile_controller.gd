@@ -16,6 +16,7 @@ var explosion_damage_mult: float = 0.55
 var knockback_strength: float = 120.0
 var crit_chance: float = 0.0
 var crit_damage_mult: float = 1.5
+var can_pierce_world: bool = false
 
 var _remaining_pierces: int = 0
 var _age: float = 0.0
@@ -24,7 +25,7 @@ var _is_spent: bool = false
 
 func _ready() -> void:
 	collision_layer = CollisionLayers.PROJECTILE
-	collision_mask = CollisionLayers.ENEMY
+	_refresh_collision_mask()
 	body_entered.connect(_on_body_entered)
 
 
@@ -39,10 +40,12 @@ func configure(profile: ShotProfile, shot_direction: Vector2) -> void:
 	knockback_strength = profile.knockback_strength
 	crit_chance = profile.crit_chance
 	crit_damage_mult = profile.crit_damage_mult
+	can_pierce_world = profile.can_pierce_world
 	_remaining_pierces = pierce_count
 	_is_spent = false
 	scale = Vector2.ONE * profile.projectile_size
 	rotation = direction.angle()
+	_refresh_collision_mask()
 
 
 func _physics_process(delta: float) -> void:
@@ -55,6 +58,9 @@ func _physics_process(delta: float) -> void:
 func _on_body_entered(body: Node) -> void:
 	if _is_spent:
 		return
+	if body is CollisionObject2D and (body as CollisionObject2D).collision_layer & CollisionLayers.WORLD != 0:
+		_hit_world()
+		return
 	if not body.is_in_group("enemies"):
 		return
 
@@ -66,6 +72,21 @@ func _on_body_entered(body: Node) -> void:
 		set_deferred("monitoring", false)
 		set_deferred("monitorable", false)
 		queue_free()
+
+
+func _hit_world() -> void:
+	if can_pierce_world:
+		return
+	_is_spent = true
+	set_deferred("monitoring", false)
+	set_deferred("monitorable", false)
+	queue_free()
+
+
+func _refresh_collision_mask() -> void:
+	collision_mask = CollisionLayers.ENEMY
+	if not can_pierce_world:
+		collision_mask |= CollisionLayers.WORLD
 
 
 func play_explosion_feedback() -> void:

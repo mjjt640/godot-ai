@@ -10,5 +10,7 @@ extends Resource
 @export var projectile_speed: float = 520.0
 @export var projectile_lifetime: float = 1.6
 @export var projectile_size: float = 1.0
+@export var attack_range: float = 780.0
+@export var can_pierce_world: bool = false
 @export var explosion_damage_mult: float = 0.55
 @export var knockback_strength: float = 120.0

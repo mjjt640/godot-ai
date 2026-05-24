@@ -32,7 +32,7 @@ func _run() -> void:
 	_check_collision_scene("res://scenes/enemies/enemy_tank.tscn", CollisionLayers.ENEMY, CollisionLayers.WORLD)
 	_check_collision_scene("res://scenes/enemies/enemy_elite_brute.tscn", CollisionLayers.ENEMY, CollisionLayers.WORLD)
 	_check_collision_scene("res://scenes/enemies/enemy_boss_overseer.tscn", CollisionLayers.ENEMY, CollisionLayers.WORLD)
-	_check_collision_scene("res://scenes/weapons/projectile.tscn", CollisionLayers.PROJECTILE, CollisionLayers.ENEMY)
+	_check_collision_scene("res://scenes/weapons/projectile.tscn", CollisionLayers.PROJECTILE, CollisionLayers.ENEMY | CollisionLayers.WORLD)
 	_check_collision_scene("res://scenes/pickups/xp_pickup.tscn", CollisionLayers.PICKUP, CollisionLayers.PLAYER)
 	_check_xp_pickup_magnet_is_player_driven()
 	_check_arena_bounds_scene()
@@ -43,8 +43,10 @@ func _run() -> void:
 	_check_combat_feedback_readability_hooks()
 	_check_projectile_single_target_hit()
 	_check_projectile_explosion_damage_multiplier()
+	_check_projectile_world_collision_rules()
 	_check_enemy_soft_separation()
 	_check_enemy_obstacle_navigation()
+	_check_enemy_obstacle_escape_navigation_hooks()
 	_check_enemy_skill_executor_split()
 	_check_enemy_behavior_executor_split()
 	_check_boss_wide_body_navigation_and_state()
@@ -53,6 +55,7 @@ func _run() -> void:
 	_check_boss_health_bar_ui()
 	_check_enemy_health_bar_rules()
 	_check_enemy_behavior_variants()
+	_check_base_weapon_parameters_apply_to_profile()
 	_check_stat_upgrade_applies_to_profile()
 	_check_character_stats_apply_to_profile()
 	_check_critical_hit_damage()
@@ -344,6 +347,35 @@ func _check_projectile_explosion_damage_multiplier() -> void:
 	_remove_instance(projectile)
 
 
+func _check_projectile_world_collision_rules() -> void:
+	var projectile := _instantiate_scene("res://scenes/weapons/projectile.tscn") as ProjectileController
+	if projectile == null:
+		return
+
+	root.add_child(projectile)
+	var profile := ShotProfile.new()
+	profile.can_pierce_world = false
+	projectile.configure(profile, Vector2.RIGHT)
+	_expect((projectile.collision_mask & CollisionLayers.WORLD) != 0, "Projectile should scan WORLD collisions by default")
+	_expect(not projectile.can_pierce_world, "Projectile should default to stopping on world collisions")
+	var world_obstacle := _create_test_world_obstacle(Vector2.ZERO, Vector2(32.0, 32.0))
+	root.add_child(world_obstacle)
+	projectile.call("_on_body_entered", world_obstacle)
+	_expect(projectile.is_queued_for_deletion(), "Non-world-piercing projectile should queue_free after hitting WORLD")
+	_remove_instance(world_obstacle)
+	_remove_instance(projectile)
+
+	var piercing_projectile := _instantiate_scene("res://scenes/weapons/projectile.tscn") as ProjectileController
+	if piercing_projectile == null:
+		return
+	root.add_child(piercing_projectile)
+	var piercing_profile := ShotProfile.new()
+	piercing_profile.can_pierce_world = true
+	piercing_projectile.configure(piercing_profile, Vector2.RIGHT)
+	_expect(piercing_projectile.can_pierce_world, "Projectile should read can_pierce_world from ShotProfile")
+	_expect((piercing_projectile.collision_mask & CollisionLayers.WORLD) == 0, "World-piercing projectile should not scan WORLD collisions")
+	_remove_instance(piercing_projectile)
+
 func _check_enemy_soft_separation() -> void:
 	var player := _instantiate_scene("res://scenes/player/player.tscn") as PlayerController
 	var first_enemy := _instantiate_scene("res://scenes/enemies/enemy_basic.tscn") as EnemyController
@@ -395,6 +427,12 @@ func _check_enemy_obstacle_navigation() -> void:
 	_remove_instance(enemy)
 	_remove_instance(player)
 
+
+func _check_enemy_obstacle_escape_navigation_hooks() -> void:
+	var enemy_source := FileAccess.get_file_as_string("res://scripts/game/enemy_controller.gd")
+	_expect(enemy_source.find("_recover_from_slide_collisions") >= 0, "EnemyController should recover when slide collisions show it is stuck on a world obstacle")
+	_expect(enemy_source.find("_get_detour_angle_multiplier") >= 0, "EnemyController should expand detour angle when regular obstacle steering is stuck")
+	_expect(enemy_source.find("_choose_clearer_direction") >= 0, "EnemyController should choose from more than two obstacle detour directions")
 
 func _check_enemy_skill_executor_split() -> void:
 	var base_executor_path := "res://scripts/game/enemy_skill_executor.gd"
@@ -756,6 +794,24 @@ func _check_enemy_behavior_variants() -> void:
 		_remove_instance(shield_enemy)
 
 
+func _check_base_weapon_parameters_apply_to_profile() -> void:
+	var base_weapon := BaseWeaponData.new()
+	base_weapon.attack_range = 520.0
+	base_weapon.can_pierce_world = true
+	var profile := ModuleApplier.create_shot_profile(base_weapon, {}, {}, {})
+	_expect(is_equal_approx(profile.attack_range, 520.0), "BaseWeaponData attack_range should define the base lock-on range")
+	_expect(profile.can_pierce_world, "BaseWeaponData can_pierce_world should flow into ShotProfile")
+	var character_limited_profile := ModuleApplier.create_shot_profile(base_weapon, {}, {}, {&"attack_range": 480.0})
+	_expect(is_equal_approx(character_limited_profile.attack_range, 480.0), "Character attack_range should cap weapon lock-on range when lower")
+	var character_long_range_profile := ModuleApplier.create_shot_profile(base_weapon, {}, {}, {&"attack_range": 900.0})
+	_expect(is_equal_approx(character_long_range_profile.attack_range, 520.0), "Character attack_range should not erase the weapon base lock-on range when higher")
+
+	var core_bolt := load("res://resources/weapons/core_bolt.tres") as BaseWeaponData
+	_expect(core_bolt != null, "Core bolt weapon should load")
+	if core_bolt != null:
+		_expect(core_bolt.attack_range > 0.0, "Core bolt should configure a finite lock-on range")
+		_expect(not core_bolt.can_pierce_world, "Core bolt should not pierce world obstacles by default")
+
 func _check_stat_upgrade_applies_to_profile() -> void:
 	var build_state := BuildState.new()
 	var base_weapon := BaseWeaponData.new()
@@ -818,6 +874,7 @@ func _check_character_stats_apply_to_profile() -> void:
 	var build_state := BuildState.new()
 	var base_weapon := BaseWeaponData.new()
 	base_weapon.cooldown = 0.6
+	base_weapon.attack_range = 900.0
 	build_state.base_weapon_data = base_weapon
 	build_state.default_fire_mode = null
 	build_state.default_payload = null

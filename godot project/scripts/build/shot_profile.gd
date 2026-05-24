@@ -15,6 +15,7 @@ var knockback_strength: float = 120.0
 var burst_count: int = 1
 var burst_interval: float = 0.08
 var attack_range: float = 780.0
+var can_pierce_world: bool = false
 var crit_chance: float = 0.0
 var crit_damage_mult: float = 1.5
 
@@ -35,6 +36,7 @@ func duplicate_profile() -> ShotProfile:
 	copy.burst_count = burst_count
 	copy.burst_interval = burst_interval
 	copy.attack_range = attack_range
+	copy.can_pierce_world = can_pierce_world
 	copy.crit_chance = crit_chance
 	copy.crit_damage_mult = crit_damage_mult
 	return copy

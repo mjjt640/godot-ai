@@ -27,6 +27,8 @@ var _last_navigation_position: Vector2 = Vector2.ZERO
 var _navigation_stuck_time: float = 0.0
 var _detour_direction: int = 0
 var _detour_remaining: float = 0.0
+var _obstacle_escape_remaining: float = 0.0
+var _last_world_collision_normal: Vector2 = Vector2.ZERO
 var _body_probe_radius: float = 0.0
 var _combat_state: CombatState = CombatState.CHASE
 var _combat_state_remaining: float = 0.0
@@ -80,6 +82,7 @@ func _physics_process(_delta: float) -> void:
 	var direction := _get_navigation_direction(delta_to_target, _delta)
 	velocity = direction * _get_move_speed() + _get_separation_velocity() + _knockback_velocity
 	move_and_slide()
+	_recover_from_slide_collisions(direction)
 	_update_navigation_stuck(_delta, direction)
 	_decay_knockback(_delta)
 
@@ -191,6 +194,7 @@ func move_skill_idle(delta: float) -> void:
 func move_skill_motion(delta: float, direction: Vector2) -> void:
 	velocity = _skill_motion_velocity + _get_separation_velocity() + _knockback_velocity
 	move_and_slide()
+	_recover_from_slide_collisions(direction)
 	_update_navigation_stuck(delta, direction)
 	_decay_knockback(delta)
 
@@ -225,6 +229,8 @@ func _get_navigation_direction(delta_to_target: Vector2, delta: float) -> Vector
 
 	if _detour_remaining > 0.0:
 		_detour_remaining -= delta
+	if _obstacle_escape_remaining > 0.0:
+		_obstacle_escape_remaining -= delta
 
 	var direct_direction := delta_to_target.normalized()
 	var probe_distance := _get_path_probe_distance(delta_to_target.length())
@@ -237,12 +243,12 @@ func _get_navigation_direction(delta_to_target: Vector2, delta: float) -> Vector
 		_detour_direction = 0
 		return direct_direction
 
-	if _detour_direction == 0 or _detour_remaining <= 0.0:
+	if _detour_direction == 0 or _detour_remaining <= 0.0 or _obstacle_escape_remaining > 0.0:
 		_detour_direction = _choose_detour_direction(direct_direction, probe_distance)
 		_detour_remaining = enemy_data.get_path_detour_commit_time() if enemy_data != null else 0.42
 
 	var side_angle := enemy_data.get_path_side_probe_angle() if enemy_data != null else 0.9
-	var side_direction := direct_direction.rotated(side_angle * float(_detour_direction))
+	var side_direction := direct_direction.rotated(side_angle * _get_detour_angle_multiplier() * float(_detour_direction))
 	var avoidance_strength := enemy_data.get_path_avoidance_strength() if enemy_data != null else 1.15
 	return (direct_direction + side_direction * avoidance_strength).normalized()
 
@@ -255,13 +261,30 @@ func _get_path_probe_distance(target_distance: float) -> float:
 
 func _choose_detour_direction(direct_direction: Vector2, probe_distance: float) -> int:
 	var side_angle := enemy_data.get_path_side_probe_angle() if enemy_data != null else 0.9
-	var left_direction := direct_direction.rotated(side_angle)
-	var right_direction := direct_direction.rotated(-side_angle)
-	var left_clearance := _get_world_clearance(left_direction, probe_distance)
-	var right_clearance := _get_world_clearance(right_direction, probe_distance)
-	if is_equal_approx(left_clearance, right_clearance):
-		return 1 if int(get_instance_id()) % 2 == 0 else -1
-	return 1 if left_clearance > right_clearance else -1
+	return _choose_clearer_direction(direct_direction, side_angle, probe_distance)
+
+
+func _choose_clearer_direction(direct_direction: Vector2, side_angle: float, probe_distance: float) -> int:
+	var best_direction := 1 if int(get_instance_id()) % 2 == 0 else -1
+	var best_score := -INF
+	var angle_multiplier := _get_detour_angle_multiplier()
+	for side in [-1, 1]:
+		for multiplier in [1.0, angle_multiplier, angle_multiplier + 0.65]:
+			var candidate := direct_direction.rotated(side_angle * multiplier * float(side))
+			var score := _get_world_clearance(candidate, probe_distance)
+			if _last_world_collision_normal != Vector2.ZERO:
+				score += maxf(candidate.dot(_last_world_collision_normal), 0.0) * _get_move_speed() * 0.25
+			if score > best_score:
+				best_score = score
+				best_direction = side
+	return best_direction
+
+
+func _get_detour_angle_multiplier() -> float:
+	var is_stuck := enemy_data != null and _navigation_stuck_time >= enemy_data.get_path_stuck_time()
+	if _obstacle_escape_remaining > 0.0 or is_stuck:
+		return 1.75
+	return 1.0
 
 
 func _has_clear_target_line(delta_to_target: Vector2) -> bool:
@@ -347,6 +370,30 @@ func _update_navigation_stuck(delta: float, direction: Vector2) -> void:
 func _reset_navigation_stuck() -> void:
 	_navigation_stuck_time = 0.0
 	_last_navigation_position = global_position
+
+
+func _recover_from_slide_collisions(direction: Vector2) -> void:
+	if direction == Vector2.ZERO:
+		return
+
+	for index in range(get_slide_collision_count()):
+		var collision := get_slide_collision(index)
+		if collision == null:
+			continue
+		var collider := collision.get_collider()
+		if not collider is CollisionObject2D:
+			continue
+		var collision_object := collider as CollisionObject2D
+		if collision_object.collision_layer & CollisionLayers.WORLD == 0:
+			continue
+
+		_last_world_collision_normal = collision.get_normal()
+		_obstacle_escape_remaining = maxf(_obstacle_escape_remaining, 0.28)
+		var normal_side := signf(_last_world_collision_normal.cross(direction))
+		if not is_zero_approx(normal_side):
+			_detour_direction = int(normal_side)
+			_detour_remaining = enemy_data.get_path_detour_commit_time() if enemy_data != null else 0.42
+		return
 
 
 func _update_behavior_executors(delta_to_target: Vector2, delta: float) -> void:

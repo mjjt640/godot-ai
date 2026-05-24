@@ -10,6 +10,8 @@ static func create_shot_profile(base_weapon: BaseWeaponData, modules_by_slot: Di
 		profile.speed = base_weapon.projectile_speed
 		profile.lifetime = base_weapon.projectile_lifetime
 		profile.projectile_size = base_weapon.projectile_size
+		profile.attack_range = base_weapon.attack_range
+		profile.can_pierce_world = base_weapon.can_pierce_world
 		profile.explosion_damage_mult = base_weapon.explosion_damage_mult
 		profile.knockback_strength = base_weapon.knockback_strength
 
@@ -55,7 +57,7 @@ static func _apply_character_modifiers(profile: ShotProfile, modifiers: Dictiona
 
 	var attack_speed: float = max(_float_modifier(modifiers, &"attack_speed", 1.0), 0.01)
 	profile.cooldown /= attack_speed
-	profile.attack_range = max(_float_modifier(modifiers, &"attack_range", profile.attack_range), 0.0)
+	profile.attack_range = min(profile.attack_range, max(_float_modifier(modifiers, &"attack_range", profile.attack_range), 0.0))
 	profile.crit_chance = clampf(_float_modifier(modifiers, &"crit_chance", profile.crit_chance), 0.0, 1.0)
 	profile.crit_damage_mult = max(_float_modifier(modifiers, &"crit_damage_mult", profile.crit_damage_mult), 1.0)
 

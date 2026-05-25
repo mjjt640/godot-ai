@@ -74,6 +74,7 @@ func _run() -> void:
 	_check_upgrade_pool_decoupling()
 	_check_run_tuning()
 	_check_map_documentation()
+	_check_legacy_paths_removed()
 	_check_run_objective()
 	_check_wave_table()
 	_check_enemy_templates_and_pool_variety()
@@ -1576,6 +1577,31 @@ func _check_map_documentation() -> void:
 	_expect(source.find("ArenaBounds") >= 0, "Map architecture documentation should describe ArenaBounds")
 	_expect(source.find("WorldCollisionLayer") >= 0, "Map architecture documentation should describe collision layer ownership")
 	_expect(source.find("HazardAreaLayer") >= 0, "Map architecture documentation should describe hazard layer ownership")
+
+
+func _check_legacy_paths_removed() -> void:
+	for legacy_path in [
+		"res://docs/map_architecture.md",
+		"res://docs/project_structure.md",
+		"res://docs/character_asset_spec.md",
+		"res://docs/character_node_structure.md",
+		"res://resources/world/default_arena_visual.tres",
+		"res://resources/world/cyber_test_zone_visual.tres",
+		"res://resources/world/arena_visual_data.gd",
+		"res://resources/world/hazard_data.gd",
+		"res://resources/world/obstacle_data.gd",
+		"res://resources/upgrades/default_upgrade_pool.tres",
+		"res://resources/upgrades/default_module_skill_pool.tres",
+		"res://resources/upgrades/default_general_skill_pool.tres",
+		"res://resources/modules/fire_burst.tres",
+		"res://resources/modules/fire_quick_single.tres",
+		"res://resources/modules/fire_single_shot.tres",
+		"res://resources/modules/fire_spread.tres",
+		"res://resources/modules/payload_explosive.tres",
+		"res://resources/modules/payload_normal.tres",
+		"res://resources/modules/payload_piercing.tres",
+	]:
+		_expect(not FileAccess.file_exists(legacy_path), "Legacy path should be removed: %s" % legacy_path)
 
 
 func _check_run_objective() -> void:

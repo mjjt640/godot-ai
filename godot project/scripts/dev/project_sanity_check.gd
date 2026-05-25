@@ -7,6 +7,7 @@ const SanityContextScript = preload("res://scripts/dev/sanity_context.gd")
 const WorldMapChecksScript = preload("res://scripts/dev/world_map_checks.gd")
 const ProgressionChecksScript = preload("res://scripts/dev/progression_checks.gd")
 const EnemyCombatChecksScript = preload("res://scripts/dev/enemy_combat_checks.gd")
+const UIRunProfileChecksScript = preload("res://scripts/dev/ui_run_profile_checks.gd")
 const ENEMY_BEHAVIOR_PRESSURE := 2
 const ENEMY_BEHAVIOR_SHIELD := 3
 
@@ -26,6 +27,7 @@ var _removed_xp_movement_key := "xp_magnet" + "_speed"
 var _world_map_checks = WorldMapChecksScript.new()
 var _progression_checks = ProgressionChecksScript.new()
 var _enemy_combat_checks = EnemyCombatChecksScript.new()
+var _ui_run_profile_checks = UIRunProfileChecksScript.new()
 
 
 func _ctx():
@@ -227,124 +229,19 @@ func _check_boss_wide_body_navigation_and_state() -> void:
 
 
 func _check_health_bar_ui() -> void:
-	var hud := _instantiate_scene("res://scenes/ui/hud.tscn")
-	if hud != null:
-		root.add_child(hud)
-		var character_label := hud.get_node_or_null("%CharacterLabel") as Label
-		_expect(character_label != null, "HUD should include a player character Label")
-		var health_bar := hud.get_node_or_null("%HealthBar") as ProgressBar
-		_expect(health_bar != null, "HUD should include a player health ProgressBar")
-		if health_bar != null:
-			_expect(not health_bar.show_percentage, "HUD health bar should hide percentage text")
-		_remove_instance(hud)
-
-	for scene_path in [
-		"res://scenes/enemies/enemy_basic.tscn",
-		"res://scenes/enemies/enemy_fast.tscn",
-		"res://scenes/enemies/enemy_tank.tscn",
-	]:
-		var enemy := _instantiate_scene(scene_path)
-		if enemy == null:
-			continue
-		root.add_child(enemy)
-		var enemy_health_bar := enemy.get_node_or_null("HealthBar") as ProgressBar
-		_expect(enemy_health_bar != null, "%s should include an enemy health ProgressBar" % scene_path)
-		if enemy_health_bar != null:
-			_expect(not enemy_health_bar.show_percentage, "%s enemy health bar should hide percentage text" % scene_path)
-		_remove_instance(enemy)
+	_ui_run_profile_checks.call("check_health_bar_ui", _ctx())
 
 
 func _check_hud_run_objective_ui() -> void:
-	var hud := _instantiate_scene("res://scenes/ui/hud.tscn") as HUDController
-	if hud == null:
-		return
-
-	root.add_child(hud)
-	_expect(hud.get_node_or_null("%RunTimeLabel") != null, "HUD should include a run time Label")
-	_expect(hud.get_node_or_null("%ObjectiveLabel") != null, "HUD should include a run objective Label")
-	_expect(hud.get_node_or_null("%NextEventLabel") != null, "HUD should include a next objective event Label")
-
-	var objective := load("res://resources/runs/default_run_objective.tres")
-	hud.update_run_status(12.0, objective)
-	var run_time_label := hud.get_node_or_null("%RunTimeLabel") as Label
-	var objective_label := hud.get_node_or_null("%ObjectiveLabel") as Label
-	var next_event_label := hud.get_node_or_null("%NextEventLabel") as Label
-	if run_time_label != null:
-		_expect(run_time_label.text.find("00:12") >= 0, "HUD run time should render elapsed time")
-	if objective_label != null:
-		_expect(objective_label.text.find("目标") >= 0, "HUD objective text should explain the run objective")
-	if next_event_label != null:
-		_expect(next_event_label.text.find("精英") >= 0, "HUD next event should describe the first elite event")
-		_expect(next_event_label.text.find(GameText.format_time(58.0)) >= 0, "HUD next event should show remaining time")
-
-	hud.update_run_status(181.0, objective)
-	if next_event_label != null:
-		_expect(next_event_label.text.find("Boss") >= 0 or next_event_label.text.find("压制核心") >= 0, "HUD next event should keep boss pressure visible after boss spawn")
-	_remove_instance(hud)
+	_ui_run_profile_checks.call("check_hud_run_objective_ui", _ctx(), GameText)
 
 
 func _check_boss_health_bar_ui() -> void:
-	var hud := _instantiate_scene("res://scenes/ui/hud.tscn") as HUDController
-	if hud == null:
-		return
-
-	root.add_child(hud)
-	var status_panel := hud.get_node_or_null("Root/StatusPanel")
-	_expect(status_panel != null, "HUD player status should be anchored in the upper-left StatusPanel")
-	var old_center_margin := hud.get_node_or_null("Root/MarginContainer")
-	_expect(old_center_margin == null, "HUD should not keep player status in a centered MarginContainer")
-
-	var boss_panel := hud.get_node_or_null("%BossHealthPanel") as Control
-	var boss_bar := hud.get_node_or_null("%BossHealthBar") as ProgressBar
-	var boss_label := hud.get_node_or_null("%BossHealthLabel") as Label
-	_expect(boss_panel != null, "HUD should include a top-center BossHealthPanel")
-	_expect(boss_bar != null, "HUD should include a BossHealthBar")
-	_expect(boss_label != null, "HUD should include a BossHealthLabel")
-	if boss_panel != null:
-		_expect(not boss_panel.visible, "Boss health panel should start hidden")
-
-	var boss := _instantiate_scene("res://scenes/enemies/enemy_boss_overseer.tscn") as EnemyController
-	if boss != null:
-		root.add_child(boss)
-		_expect(hud.has_method("track_boss"), "HUD should expose track_boss for boss health UI")
-		if hud.has_method("track_boss"):
-			hud.track_boss(boss)
-		if boss_panel != null:
-			_expect(boss_panel.visible, "Boss health panel should show while tracking boss")
-		if boss_bar != null:
-			_expect(is_equal_approx(boss_bar.max_value, boss.get_max_health()), "Boss health bar max should use boss health")
-		boss.take_damage(10.0)
-		if boss_bar != null:
-			_expect(is_equal_approx(boss_bar.value, boss.health), "Boss health bar should update from boss health signal")
-		_remove_instance(boss)
-	_remove_instance(hud)
+	_ui_run_profile_checks.call("check_boss_health_bar_ui", _ctx())
 
 
 func _check_enemy_health_bar_rules() -> void:
-	var normal_enemy := _instantiate_scene("res://scenes/enemies/enemy_basic.tscn") as EnemyController
-	var elite_enemy := _instantiate_scene("res://scenes/enemies/enemy_elite_brute.tscn") as EnemyController
-	var boss_enemy := _instantiate_scene("res://scenes/enemies/enemy_boss_overseer.tscn") as EnemyController
-	if normal_enemy != null:
-		root.add_child(normal_enemy)
-		var normal_bar := normal_enemy.get_node_or_null("HealthBar") as ProgressBar
-		_expect(normal_bar != null, "Normal enemy should keep a hit-revealed health bar")
-		if normal_bar != null:
-			_expect(not normal_bar.visible, "Normal enemy health bar should start hidden")
-			normal_enemy.take_damage(1.0)
-			_expect(normal_bar.visible, "Normal enemy health bar should show after taking damage")
-		_remove_instance(normal_enemy)
-	if elite_enemy != null:
-		root.add_child(elite_enemy)
-		var elite_bar := elite_enemy.get_node_or_null("HealthBar") as ProgressBar
-		_expect(elite_bar != null, "Elite enemy should include a persistent overhead health bar")
-		if elite_bar != null:
-			_expect(elite_bar.visible, "Elite enemy health bar should be persistent")
-		_remove_instance(elite_enemy)
-	if boss_enemy != null:
-		root.add_child(boss_enemy)
-		var boss_bar := boss_enemy.get_node_or_null("HealthBar") as ProgressBar
-		_expect(boss_bar == null or not boss_bar.visible, "Boss overhead health bar should not compete with HUD boss bar")
-		_remove_instance(boss_enemy)
+	_ui_run_profile_checks.call("check_enemy_health_bar_rules", _ctx())
 
 
 func _check_enemy_behavior_variants() -> void:
@@ -352,186 +249,27 @@ func _check_enemy_behavior_variants() -> void:
 
 
 func _check_base_weapon_parameters_apply_to_profile() -> void:
-	var base_weapon := BaseWeaponData.new()
-	base_weapon.attack_range = 520.0
-	base_weapon.can_pierce_world = true
-	var profile := ModuleApplier.create_shot_profile(base_weapon, {}, {}, {})
-	_expect(is_equal_approx(profile.attack_range, 520.0), "BaseWeaponData attack_range should define the base lock-on range")
-	_expect(profile.can_pierce_world, "BaseWeaponData can_pierce_world should flow into ShotProfile")
-	var character_limited_profile := ModuleApplier.create_shot_profile(base_weapon, {}, {}, {&"attack_range": 480.0})
-	_expect(is_equal_approx(character_limited_profile.attack_range, 480.0), "Character attack_range should cap weapon lock-on range when lower")
-	var character_long_range_profile := ModuleApplier.create_shot_profile(base_weapon, {}, {}, {&"attack_range": 900.0})
-	_expect(is_equal_approx(character_long_range_profile.attack_range, 520.0), "Character attack_range should not erase the weapon base lock-on range when higher")
-
-	var core_bolt := load("res://resources/weapons/core_bolt.tres") as BaseWeaponData
-	_expect(core_bolt != null, "Core bolt weapon should load")
-	if core_bolt != null:
-		_expect(core_bolt.attack_range > 0.0, "Core bolt should configure a finite lock-on range")
-		_expect(not core_bolt.can_pierce_world, "Core bolt should not pierce world obstacles by default")
+	_ui_run_profile_checks.call("check_base_weapon_parameters_apply_to_profile", _ctx())
 
 
 func _check_stat_upgrade_applies_to_profile() -> void:
-	var build_state := BuildState.new()
-	var base_weapon := BaseWeaponData.new()
-	base_weapon.damage = 10.0
-	base_weapon.cooldown = 0.5
-	base_weapon.projectile_speed = 500.0
-	base_weapon.projectile_lifetime = 1.5
-	base_weapon.projectile_size = 1.0
-	base_weapon.knockback_strength = 100.0
-	build_state.base_weapon_data = base_weapon
-	build_state.default_fire_mode = null
-	build_state.default_payload = null
-	root.add_child(build_state)
-
-	var upgrade_manager := UpgradeManager.new()
-	root.add_child(upgrade_manager)
-	upgrade_manager._build_state = build_state
-
-	var option := UpgradeOptionData.new()
-	option.upgrade_type = UpgradeOptionData.UpgradeType.STAT
-	option.stat_modifiers = {
-		&"pierce_count_add": 1,
-		&"explosion_radius_add": 28.0,
-		&"explosion_damage_mult_add": 0.1,
-		&"knockback_add": 35.0,
-		&"attack_speed_add": 1.0,
-		&"attack_range_add": 120.0,
-		&"crit_chance_add": 0.2,
-		&"crit_damage_mult_add": 0.4,
-		&"luck_add": 0.25,
-	}
-	var player := PlayerController.new()
-	root.add_child(player)
-	upgrade_manager._player = player
-	var initial_luck := player.get_luck()
-	upgrade_manager.apply_upgrade(option)
-	var profile := build_state.get_current_shot_profile()
-
-	_expect(profile.pierce_count == 1, "STAT upgrade should add projectile pierce_count")
-	_expect(is_equal_approx(profile.explosion_radius, 28.0), "STAT upgrade should add explosion radius")
-	_expect(is_equal_approx(profile.explosion_damage_mult, 0.65), "STAT upgrade should add explosion damage multiplier")
-	_expect(is_equal_approx(profile.knockback_strength, 135.0), "STAT upgrade should add projectile knockback")
-	_expect(is_equal_approx(profile.cooldown, 0.25), "STAT upgrade should apply attack_speed_add")
-	_expect(is_equal_approx(profile.attack_range, 900.0), "STAT upgrade should add attack range")
-	_expect(is_equal_approx(profile.crit_chance, 0.2), "STAT upgrade should add crit chance")
-	_expect(is_equal_approx(profile.crit_damage_mult, 1.9), "STAT upgrade should add crit damage")
-	_expect(is_equal_approx(player.get_luck(), initial_luck + 0.25), "STAT upgrade should add player luck for module skill pool")
-	_remove_instance(player)
-	_remove_instance(upgrade_manager)
-	_remove_instance(build_state)
+	_ui_run_profile_checks.call("check_stat_upgrade_applies_to_profile", _ctx())
 
 
 func _check_character_stats_apply_to_profile() -> void:
-	var character := CharacterData.new()
-	character.attack_speed = 2.0
-	character.attack_range = 640.0
-	character.crit_chance = 0.35
-	character.crit_damage_mult = 1.8
-
-	var build_state := BuildState.new()
-	var base_weapon := BaseWeaponData.new()
-	base_weapon.cooldown = 0.6
-	base_weapon.attack_range = 900.0
-	build_state.base_weapon_data = base_weapon
-	build_state.default_fire_mode = null
-	build_state.default_payload = null
-	root.add_child(build_state)
-	build_state.configure_from_character(character)
-	var profile := build_state.get_current_shot_profile()
-
-	_expect(is_equal_approx(profile.cooldown, 0.3), "Character attack_speed should reduce shot cooldown")
-	_expect(is_equal_approx(profile.attack_range, 640.0), "Character attack_range should apply to shot profile")
-	_expect(is_equal_approx(profile.crit_chance, 0.35), "Character crit_chance should apply to shot profile")
-	_expect(is_equal_approx(profile.crit_damage_mult, 1.8), "Character crit_damage_mult should apply to shot profile")
-	_remove_instance(build_state)
+	_ui_run_profile_checks.call("check_character_stats_apply_to_profile", _ctx())
 
 
 func _check_critical_hit_damage() -> void:
-	var projectile := _instantiate_scene("res://scenes/weapons/projectile.tscn") as ProjectileController
-	if projectile == null:
-		return
-
-	var target := DamageProbe.new()
-	root.add_child(projectile)
-	root.add_child(target)
-	target.add_to_group("enemies")
-	var profile := ShotProfile.new()
-	profile.damage = 10.0
-	profile.crit_chance = 1.0
-	profile.crit_damage_mult = 2.0
-	projectile.configure(profile, Vector2.RIGHT)
-	HitResolver.resolve_projectile_hit(target, projectile)
-
-	_expect(is_equal_approx(target.damage_taken, 20.0), "Projectile critical hit should multiply damage")
-	_remove_instance(target)
-	_remove_instance(projectile)
+	_ui_run_profile_checks.call("check_critical_hit_damage", _ctx(), DamageProbe)
 
 
 func _check_general_upgrade_applies_to_player() -> void:
-	var player := PlayerController.new()
-	var xp_manager := XPManager.new()
-	player.max_health = 100.0
-	root.add_child(player)
-	root.add_child(xp_manager)
-	player.health = 40.0
-
-	var upgrade_manager := UpgradeManager.new()
-	root.add_child(upgrade_manager)
-	upgrade_manager._player = player
-	upgrade_manager._xp_manager = xp_manager
-
-	var option := UpgradeOptionData.new()
-	option.upgrade_type = UpgradeOptionData.UpgradeType.GENERAL
-	option.general_modifiers = {
-		&"xp_magnet_radius_add": 70.0,
-		&"heal_add": 25.0,
-		&"move_speed_mult": 1.08,
-		&"xp_gain_mult": 1.5,
-	}
-	var initial_magnet_radius := player.get_xp_magnet_radius()
-	var initial_move_speed := player.get_move_speed()
-	upgrade_manager.apply_upgrade(option)
-	xp_manager.gain_experience(10)
-
-	_expect(is_equal_approx(player.get_xp_magnet_radius(), initial_magnet_radius + 70.0), "GENERAL upgrade should add player XP magnet radius")
-	_expect(is_equal_approx(player.health, 65.0), "GENERAL upgrade should heal player health")
-	_expect(player.get_move_speed() > initial_move_speed, "GENERAL upgrade should increase player move speed")
-	_expect(is_equal_approx(xp_manager.get_experience_gain_mult(), 1.5), "GENERAL upgrade should increase XP gain multiplier")
-	_expect(xp_manager.current_xp == 15, "XPManager should apply XP gain multiplier when gaining experience")
-	_remove_instance(upgrade_manager)
-	_remove_instance(xp_manager)
-	_remove_instance(player)
+	_ui_run_profile_checks.call("check_general_upgrade_applies_to_player", _ctx())
 
 
 func _check_luck_increases_high_rarity_weight() -> void:
-	var pool := UpgradePoolData.new()
-	var common_option := UpgradeOptionData.new()
-	common_option.id = &"common_probe"
-	common_option.rarity = UpgradeOptionData.Rarity.COMMON
-	common_option.weight = 1.0
-	var legendary_option := UpgradeOptionData.new()
-	legendary_option.id = &"legendary_probe"
-	legendary_option.rarity = UpgradeOptionData.Rarity.LEGENDARY
-	legendary_option.weight = 1.0
-
-	var player := PlayerController.new()
-	player.luck = 1.0
-	var upgrade_manager := UpgradeManager.new()
-	upgrade_manager.upgrade_pool = pool
-	upgrade_manager._option_pool_by_id[common_option.id] = pool
-	upgrade_manager._option_pool_by_id[legendary_option.id] = pool
-	root.add_child(player)
-	root.add_child(upgrade_manager)
-	upgrade_manager._player = player
-
-	var common_weight := upgrade_manager._effective_weight(common_option)
-	var legendary_weight := upgrade_manager._effective_weight(legendary_option)
-	var legendary_without_luck := legendary_option.weight * pool.get_rarity_weight(legendary_option.rarity)
-	_expect(is_equal_approx(common_weight, pool.common_rarity_weight), "Luck should not increase common upgrade weight")
-	_expect(legendary_weight > legendary_without_luck, "Luck should increase legendary upgrade weight")
-	_remove_instance(upgrade_manager)
-	_remove_instance(player)
+	_ui_run_profile_checks.call("check_luck_increases_high_rarity_weight", _ctx())
 
 
 func _check_default_character_resource() -> void:
@@ -585,52 +323,7 @@ func _check_upgrade_pool_decoupling() -> void:
 
 
 func _check_wave_table() -> void:
-	var wave_table := load("res://resources/waves/default_wave_table.tres")
-	if wave_table == null:
-		_failures.append("Failed to load default wave table")
-		return
-
-	var entries: Array = wave_table.get("entries")
-	_expect(entries.size() >= 3, "Default wave table should have early, mid and late entries")
-	var has_basic := false
-	var has_fast := false
-	var has_tank := false
-	var has_swarm := false
-	var has_ranged := false
-	var has_shield := false
-	var previous_start := -1.0
-	for entry in entries:
-		_expect(entry != null, "Wave table should not contain null entries")
-		if entry == null:
-			continue
-		_expect(entry.start_time > previous_start, "Wave entries should be ordered by start_time")
-		_expect(entry.spawn_interval > 0.0, "Wave entry %.0f needs positive spawn_interval" % entry.start_time)
-		_expect(entry.spawn_batch_size > 0, "Wave entry %.0f needs positive spawn_batch_size" % entry.start_time)
-		_expect(entry.max_alive_enemies >= entry.spawn_batch_size, "Wave entry %.0f max_alive_enemies should cover batch size" % entry.start_time)
-		_expect(not entry.enemy_scenes.is_empty(), "Wave entry %.0f needs enemy scenes" % entry.start_time)
-		_expect(entry.spawn_batch_size <= 6, "Wave entry %.0f spawn_batch_size should stay readable" % entry.start_time)
-		_expect(entry.max_alive_enemies <= 48, "Wave entry %.0f max_alive_enemies should stay within early-run pressure budget" % entry.start_time)
-		for enemy_scene in entry.enemy_scenes:
-			_expect(enemy_scene != null, "Wave entry %.0f should not contain null enemy scenes" % entry.start_time)
-			if enemy_scene == load("res://scenes/enemies/enemy_basic.tscn"):
-				has_basic = true
-			elif enemy_scene == load("res://scenes/enemies/enemy_fast.tscn"):
-				has_fast = true
-			elif enemy_scene == load("res://scenes/enemies/enemy_tank.tscn"):
-				has_tank = true
-			elif enemy_scene == load("res://scenes/enemies/enemy_swarm.tscn"):
-				has_swarm = true
-			elif enemy_scene == load("res://scenes/enemies/enemy_ranged.tscn"):
-				has_ranged = true
-			elif enemy_scene == load("res://scenes/enemies/enemy_shield.tscn"):
-				has_shield = true
-		previous_start = entry.start_time
-	_expect(has_basic, "Default wave table should include basic enemies")
-	_expect(has_fast, "Default wave table should include fast enemies")
-	_expect(has_tank, "Default wave table should include tank enemies")
-	_expect(has_swarm, "Default wave table should include swarm enemies")
-	_expect(has_ranged, "Default wave table should include ranged pressure enemies")
-	_expect(has_shield, "Default wave table should include shield enemies")
+	_ui_run_profile_checks.call("check_wave_table", _ctx())
 
 
 func _check_enemy_templates_and_pool_variety() -> void:
@@ -638,17 +331,7 @@ func _check_enemy_templates_and_pool_variety() -> void:
 
 
 func _check_run_tuning() -> void:
-	var run_tuning := load("res://resources/runs/default_run_tuning.tres")
-	if run_tuning == null:
-		_failures.append("Failed to load default run tuning")
-		return
-
-	_expect(run_tuning.spawn_interval > 0.0, "Run tuning needs positive spawn_interval")
-	_expect(run_tuning.spawn_radius > 0.0, "Run tuning needs positive spawn_radius")
-	_expect(run_tuning.minimum_spawn_distance > 0.0, "Run tuning needs positive minimum_spawn_distance")
-	_expect(run_tuning.minimum_spawn_distance < run_tuning.spawn_radius, "Run tuning minimum_spawn_distance should leave spawn ring space")
-	_expect(run_tuning.spawn_batch_size > 0, "Run tuning needs positive spawn_batch_size")
-	_expect(run_tuning.max_alive_enemies >= run_tuning.spawn_batch_size, "Run tuning max_alive_enemies should cover batch size")
+	_ui_run_profile_checks.call("check_run_tuning", _ctx())
 
 
 func _check_map_documentation() -> void:
@@ -660,91 +343,19 @@ func _check_legacy_paths_removed() -> void:
 
 
 func _check_run_objective() -> void:
-	var objective := load("res://resources/runs/default_run_objective.tres")
-	if objective == null:
-		_failures.append("Failed to load default run objective")
-		return
-
-	var has_elite := false
-	var has_boss := false
-	var previous_time := -1.0
-	var events: Array = objective.get("events")
-	for event in events:
-		_expect(event != null, "Run objective should not contain null events")
-		if event == null:
-			continue
-		var trigger_time := float(event.get("trigger_time"))
-		_expect(trigger_time > previous_time, "Run objective events should be ordered by trigger_time")
-		_expect(event.get("enemy_scene") != null, "Run objective event %s needs enemy_scene" % event.get("id"))
-		_expect(int(event.get("spawn_count")) > 0, "Run objective event %s needs positive spawn_count" % event.get("id"))
-		if int(event.get("event_type")) == 0:
-			has_elite = true
-		if int(event.get("event_type")) == 1:
-			has_boss = true
-		previous_time = trigger_time
-	_expect(has_elite, "Run objective should include an elite event")
-	_expect(has_boss, "Run objective should include a boss event")
-
-	_check_special_enemy_scene("res://scenes/enemies/enemy_elite_brute.tscn", false)
-	_check_special_enemy_scene("res://scenes/enemies/enemy_boss_overseer.tscn", true)
-
-	var run_manager_source := FileAccess.get_file_as_string("res://scripts/run/run_manager.gd")
-	_expect(run_manager_source.find("run_objective") >= 0, "RunManager should read run objective resource")
-	_expect(run_manager_source.find("show_victory") >= 0, "RunManager should show victory after boss objective")
+	_ui_run_profile_checks.call("check_run_objective", _ctx(), Callable(self, "_check_special_enemy_scene"))
 
 
 func _check_spawn_manager_is_resource_driven() -> void:
-	var source := FileAccess.get_file_as_string("res://scripts/run/spawn_manager.gd")
-	_expect(source.find("@export var enemy_scenes") == -1, "SpawnManager should read enemy scenes from wave resources")
-	_expect(source.find("res://scenes/enemies/enemy_basic.tscn") == -1, "SpawnManager should not hardcode basic enemy scene")
-	_expect(source.find("res://scenes/enemies/enemy_fast.tscn") == -1, "SpawnManager should not hardcode fast enemy scene")
-	_expect(source.find("res://scenes/enemies/enemy_tank.tscn") == -1, "SpawnManager should not hardcode tank enemy scene")
-	_expect(source.find("spawn_enemy_scene") >= 0, "SpawnManager should expose resource-driven special enemy spawning")
+	_ui_run_profile_checks.call("check_spawn_manager_is_resource_driven", _ctx())
 
 
 func _check_script_text_boundaries() -> void:
-	for path in [
-		"res://scripts/ui/hud_controller.gd",
-		"res://scripts/ui/level_up_panel_controller.gd",
-		"res://scripts/ui/upgrade_card.gd",
-	]:
-		var source := FileAccess.get_file_as_string(path)
-		_expect(source.find("GameText") >= 0, "%s should use GameText for player-visible text" % path)
+	_ui_run_profile_checks.call("check_script_text_boundaries", _ctx())
 
 
 func _check_upgrade_card_uses_game_text() -> void:
-	var source := FileAccess.get_file_as_string("res://scripts/ui/upgrade_card.gd")
-	_expect(source.find("GameText.upgrade_card") >= 0, "upgrade_card.gd should render option text through GameText.upgrade_card")
-	_expect(source.find("GameText.upgrade_card_source") >= 0, "upgrade_card.gd should render upgrade source through GameText")
-	_expect(source.find("max_module_count") >= 0, "upgrade_card.gd should receive module cap instead of hardcoding it")
-
-	var panel_source := FileAccess.get_file_as_string("res://scripts/ui/level_up_panel_controller.gd")
-	_expect(panel_source.find("max_module_count") >= 0, "LevelUpPanel should pass configured module cap into cards")
-
-	var upgrade_manager_source := FileAccess.get_file_as_string("res://scripts/progression/upgrade_manager.gd")
-	_expect(upgrade_manager_source.find("get_module_limit") >= 0, "UpgradeManager should expose resource-driven module cap for UI")
-	_expect(upgrade_manager_source.find("can_acquire_module(3") == -1, "UpgradeManager should not hardcode module cap")
-	_expect(upgrade_manager_source.find("return upgrade_pool") >= 0, "UpgradeManager should read module cap from the module install pool")
-
-	var pool_data_source := FileAccess.get_file_as_string("res://resources/upgrades/upgrade_pool_data.gd")
-	_expect(pool_data_source.find("max_module_count: int = 3") == -1, "UpgradePoolData should not hardcode the default module cap")
-
-	var module_option := UpgradeOptionData.new()
-	module_option.upgrade_type = UpgradeOptionData.UpgradeType.MODULE
-	var module_source := GameText.upgrade_card_source(module_option, 5)
-	_expect(module_source.find("新模块") >= 0, "Module upgrade card source should identify new module options")
-	_expect(module_source.find("5") >= 0, "Module upgrade card source should include configured module cap")
-
-	var stat_option := UpgradeOptionData.new()
-	stat_option.upgrade_type = UpgradeOptionData.UpgradeType.STAT
-	_expect(GameText.upgrade_card_source(stat_option).find("模块强化") >= 0, "Stat upgrade card source should identify module skill options")
-
-	var general_option := UpgradeOptionData.new()
-	general_option.upgrade_type = UpgradeOptionData.UpgradeType.GENERAL
-	_expect(GameText.upgrade_card_source(general_option).find("通用技能") >= 0, "General upgrade card source should identify general skill options")
-
-	var hud_source := FileAccess.get_file_as_string("res://scripts/ui/hud_controller.gd")
-	_expect(hud_source.find("GameText.hud_character") >= 0, "hud_controller.gd should render character text through GameText.hud_character")
+	_ui_run_profile_checks.call("check_upgrade_card_uses_game_text", _ctx(), GameText)
 
 
 func _find_upgrade_option(pool: UpgradePoolData, option_id: StringName) -> UpgradeOptionData:

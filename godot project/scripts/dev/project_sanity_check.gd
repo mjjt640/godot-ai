@@ -1125,7 +1125,7 @@ func _check_character_fields(character: Resource, label: String) -> void:
 
 
 func _check_upgrade_pool() -> void:
-	var pool := load("res://resources/upgrades/default_upgrade_pool.tres") as UpgradePoolData
+	var pool := load("res://resources/upgrades/pools/default_upgrade_pool.tres") as UpgradePoolData
 	if pool == null:
 		_failures.append("Failed to load default upgrade pool")
 		return
@@ -1153,7 +1153,7 @@ func _check_upgrade_pool() -> void:
 
 
 func _check_module_skill_pool() -> void:
-	var pool := load("res://resources/upgrades/default_module_skill_pool.tres") as UpgradePoolData
+	var pool := load("res://resources/upgrades/pools/default_module_skill_pool.tres") as UpgradePoolData
 	if pool == null:
 		_failures.append("Failed to load default module skill pool")
 		return
@@ -1228,7 +1228,7 @@ func _check_module_skill_pool() -> void:
 
 
 func _check_general_skill_pool() -> void:
-	var pool := load("res://resources/upgrades/default_general_skill_pool.tres") as UpgradePoolData
+	var pool := load("res://resources/upgrades/pools/default_general_skill_pool.tres") as UpgradePoolData
 	if pool == null:
 		_failures.append("Failed to load default general skill pool")
 		return
@@ -1285,8 +1285,8 @@ func _check_general_skill_pool() -> void:
 
 
 func _check_upgrade_filtering_rules() -> void:
-	var pool := load("res://resources/upgrades/default_upgrade_pool.tres") as UpgradePoolData
-	var module_skill_pool := load("res://resources/upgrades/default_module_skill_pool.tres") as UpgradePoolData
+	var pool := load("res://resources/upgrades/pools/default_upgrade_pool.tres") as UpgradePoolData
+	var module_skill_pool := load("res://resources/upgrades/pools/default_module_skill_pool.tres") as UpgradePoolData
 	if pool == null or module_skill_pool == null:
 		return
 
@@ -1304,7 +1304,7 @@ func _check_upgrade_filtering_rules() -> void:
 	var pierce_boost := _find_upgrade_option(module_skill_pool, &"upgrade_pierce_boost")
 	if pierce_boost != null:
 		_expect(not upgrade_manager._can_offer(pierce_boost), "Pierce boost should not appear before piercing module is current")
-		var piercing_module := load("res://resources/modules/payload_piercing.tres") as ModuleData
+		var piercing_module := load("res://resources/modules/payloads/payload_piercing.tres") as ModuleData
 		build_state.install_module(piercing_module, false, false)
 		_expect(upgrade_manager._can_offer(pierce_boost), "Pierce boost should appear after piercing module is current")
 
@@ -1354,7 +1354,7 @@ func _check_upgrade_pool_decoupling() -> void:
 	build_state.default_fire_mode = null
 	build_state.default_payload = null
 	root.add_child(build_state)
-	var normal_payload := load("res://resources/modules/payload_normal.tres") as ModuleData
+	var normal_payload := load("res://resources/modules/payloads/payload_normal.tres") as ModuleData
 	build_state.install_module(normal_payload, false, false)
 
 	var upgrade_manager := UpgradeManager.new()

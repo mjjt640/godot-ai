@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="UpgradeOptionData" load_steps=2 format=3]
 
 [ext_resource type="Script" path="res://resources/upgrades/upgrade_option_data.gd" id="1_upgrade"]
-[ext_resource type="Resource" path="res://resources/modules/payload_piercing.tres" id="2_module"]
+[ext_resource type="Resource" path="res://resources/modules/payloads/payload_piercing.tres" id="2_module"]
 
 [resource]
 script = ExtResource("1_upgrade")

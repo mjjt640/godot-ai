@@ -107,8 +107,8 @@
 ### 子目录要求
 
 1. 文件数量持续增长的目录必须尽早分子目录，不允许长期扁平堆放。
-2. `resources/upgrades/` 后续按 `pools/`、`stats/`、`general/`、`modules/`、`economy/` 拆分。
-3. `resources/modules/` 后续按 `fire_modes/` 和 `payloads/` 拆分。
+2. `resources/upgrades/` 按 `pools/`、`stats/`、`general/`、`modules/`、`economy/` 拆分。
+3. `resources/modules/` 按 `fire_modes/` 和 `payloads/` 拆分。
 4. `resources/world/` 后续按 `visuals/`、`hazards/`、`obstacles/` 拆分。
 
 ## docs 目录规范
@@ -140,7 +140,7 @@
 
 1. 先拆 `scripts/game/`，把单局编排迁到 `scripts/run/`，把敌人逻辑迁到 `scripts/enemies/`。
 2. 再把 `scenes/world/`、`scripts/world/`、`resources/world/` 统一到同一命名口径并补齐子目录。
-3. 再拆 `resources/upgrades/`、`resources/modules/` 的扁平目录。
+3. 再持续整理 `resources/upgrades/`、`resources/modules/` 的新增资源，保持分组不回退成扁平结构。
 4. 最后整理 `docs/` 的长期归档结构。
 
 ## 当前目标结构草案

@@ -4,9 +4,9 @@ extends Node
 @export var build_state_path: NodePath = ^"../BuildState"
 @export var player_path: NodePath = ^"../Player"
 @export var xp_manager_path: NodePath = ^"../XPManager"
-@export var upgrade_pool: UpgradePoolData = preload("res://resources/upgrades/default_upgrade_pool.tres")
-@export var module_skill_pool: UpgradePoolData = preload("res://resources/upgrades/default_module_skill_pool.tres")
-@export var general_skill_pool: UpgradePoolData = preload("res://resources/upgrades/default_general_skill_pool.tres")
+@export var upgrade_pool: UpgradePoolData = preload("res://resources/upgrades/pools/default_upgrade_pool.tres")
+@export var module_skill_pool: UpgradePoolData = preload("res://resources/upgrades/pools/default_module_skill_pool.tres")
+@export var general_skill_pool: UpgradePoolData = preload("res://resources/upgrades/pools/default_general_skill_pool.tres")
 
 @onready var _build_state: BuildState = get_node_or_null(build_state_path)
 @onready var _player: PlayerController = get_node_or_null(player_path)

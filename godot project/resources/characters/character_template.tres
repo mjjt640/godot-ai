@@ -1,8 +1,8 @@
 [gd_resource type="Resource" script_class="CharacterData" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://resources/characters/character_data.gd" id="1_character"]
-[ext_resource type="Resource" path="res://resources/modules/fire_single_shot.tres" id="2_fire"]
-[ext_resource type="Resource" path="res://resources/modules/payload_normal.tres" id="3_payload"]
+[ext_resource type="Resource" path="res://resources/modules/fire_modes/fire_single_shot.tres" id="2_fire"]
+[ext_resource type="Resource" path="res://resources/modules/payloads/payload_normal.tres" id="3_payload"]
 
 [resource]
 script = ExtResource("1_character")

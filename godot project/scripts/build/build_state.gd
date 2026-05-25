@@ -5,8 +5,8 @@ signal modules_changed(modules_by_slot: Dictionary)
 signal shot_profile_changed(shot_profile: ShotProfile)
 
 @export var base_weapon_data: BaseWeaponData = preload("res://resources/weapons/core_bolt.tres")
-@export var default_fire_mode: ModuleData = preload("res://resources/modules/fire_single_shot.tres")
-@export var default_payload: ModuleData = preload("res://resources/modules/payload_normal.tres")
+@export var default_fire_mode: ModuleData = preload("res://resources/modules/fire_modes/fire_single_shot.tres")
+@export var default_payload: ModuleData = preload("res://resources/modules/payloads/payload_normal.tres")
 
 var modules_by_slot: Dictionary = {}
 var stat_modifiers: Dictionary = {}

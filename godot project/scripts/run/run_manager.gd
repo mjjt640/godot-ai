@@ -1,6 +1,10 @@
 class_name RunManager
 extends Node2D
 
+const RunObjectiveControllerScript = preload("res://scripts/run/run_objective_controller.gd")
+const RunLevelFlowControllerScript = preload("res://scripts/run/run_level_flow_controller.gd")
+const RunCombatRewardControllerScript = preload("res://scripts/run/run_combat_reward_controller.gd")
+
 @export var spawn_manager_path: NodePath = ^"SpawnManager"
 @export var xp_manager_path: NodePath = ^"XPManager"
 @export var upgrade_manager_path: NodePath = ^"UpgradeManager"
@@ -29,8 +33,10 @@ extends Node2D
 @onready var _pickup_container: Node2D = get_node_or_null(pickup_container_path)
 var _camera: Camera2D
 var _run_time: float = 0.0
-var _triggered_objective_events: Dictionary = {}
 var _run_finished: bool = false
+var _objective_controller
+var _level_flow_controller
+var _combat_reward_controller
 
 
 func _physics_process(delta: float) -> void:
@@ -40,10 +46,14 @@ func _physics_process(delta: float) -> void:
 	_run_time += delta
 	if _hud != null:
 		_hud.update_run_status(_run_time, run_objective)
-	_update_objective_events()
+	_process_objective_events()
 
 
 func _ready() -> void:
+	_objective_controller = RunObjectiveControllerScript.new()
+	_level_flow_controller = RunLevelFlowControllerScript.new()
+	_combat_reward_controller = RunCombatRewardControllerScript.new()
+	_objective_controller.reset()
 	_apply_map_data()
 	if _spawn_manager != null:
 		_spawn_manager.run_tuning = run_tuning
@@ -56,12 +66,13 @@ func _ready() -> void:
 		_xp_manager.level_up_requested.connect(_on_level_up_requested)
 	if _level_up_panel != null:
 		_level_up_panel.upgrade_selected.connect(_on_upgrade_selected)
-		_level_up_panel.hide_options()
+		_level_flow_controller.initialize(_level_up_panel)
 	if _player != null:
 		_player.died.connect(_on_player_died)
 		_camera = _player.get_node_or_null("Camera2D") as Camera2D
 	if _build_state != null and _player != null:
 		_build_state.configure_from_character(_player.character_data)
+	_combat_reward_controller.configure(_xp_manager, xp_pickup_scene, _pickup_container, run_tuning, combat_feedback, _camera, get_tree())
 	if _hud != null:
 		_hud.bind(_build_state, _xp_manager, _player)
 		_hud.update_run_status(_run_time, run_objective)
@@ -82,53 +93,32 @@ func _on_enemy_spawned(enemy: EnemyController) -> void:
 
 
 func _on_enemy_died(experience_reward: int, _death_position: Vector2) -> void:
-	_spawn_xp_pickup(experience_reward, _death_position)
-	_play_camera_shake()
+	_combat_reward_controller.handle_enemy_died(experience_reward, _death_position)
 
 
 func _on_objective_enemy_died(enemy: EnemyController) -> void:
-	if enemy == null or enemy.enemy_data == null:
-		return
-	if enemy.enemy_data.is_boss:
+	if _objective_controller.is_victory_enemy(enemy):
 		_finish_run(true)
 
 
 func _on_level_up_requested() -> void:
-	if _level_up_panel == null or _upgrade_manager == null:
-		return
-
-	get_tree().paused = true
-	_level_up_panel.show_options(_upgrade_manager.request_options(), _upgrade_manager.get_module_limit())
+	_level_flow_controller.handle_level_up_requested(get_tree(), _level_up_panel, _upgrade_manager)
 
 
 func _on_upgrade_selected(option: UpgradeOptionData) -> void:
-	if _upgrade_manager != null:
-		_upgrade_manager.apply_upgrade(option)
-	if _xp_manager != null:
-		_xp_manager.confirm_level_up()
-
-	if _level_up_panel != null:
-		_level_up_panel.hide_options()
-	get_tree().paused = false
+	_level_flow_controller.handle_upgrade_selected(get_tree(), _level_up_panel, _upgrade_manager, _xp_manager, option)
 
 
 func _on_player_died() -> void:
-	if _level_up_panel != null:
-		_level_up_panel.hide_options()
+	_level_flow_controller.prepare_run_finish(_level_up_panel)
 	_finish_run(false)
 
 
-func _update_objective_events() -> void:
-	if run_objective == null or _spawn_manager == null:
+func _process_objective_events() -> void:
+	if _spawn_manager == null:
 		return
 
-	var events: Array = run_objective.get("events")
-	for event in events:
-		if event == null or _triggered_objective_events.has(event.get("id")):
-			continue
-		if _run_time < float(event.get("trigger_time")):
-			continue
-		_triggered_objective_events[event.get("id")] = true
+	for event in _objective_controller.collect_ready_events(run_objective, _run_time):
 		_spawn_objective_event(event)
 
 
@@ -141,7 +131,7 @@ func _spawn_objective_event(event: Resource) -> void:
 	for _index in range(spawn_count):
 		var enemy := _spawn_manager.spawn_enemy_scene(enemy_scene)
 		if enemy != null:
-			if enemy.enemy_data != null and enemy.enemy_data.get_is_boss() and _hud != null:
+			if _objective_controller.register_spawned_objective_enemy(enemy) and _hud != null:
 				_hud.track_boss(enemy)
 			enemy.died.connect(func(_experience_reward: int, _death_position: Vector2) -> void: _on_objective_enemy_died(enemy))
 
@@ -151,46 +141,10 @@ func _finish_run(victory: bool) -> void:
 		return
 
 	_run_finished = true
-	if _level_up_panel != null:
-		_level_up_panel.hide_options()
+	_level_flow_controller.prepare_run_finish(_level_up_panel)
 	if _hud != null:
 		if victory:
 			_hud.show_victory()
 		else:
 			_hud.show_game_over()
 	get_tree().paused = true
-
-
-func _spawn_xp_pickup(amount: int, drop_position: Vector2) -> void:
-	if xp_pickup_scene == null or _xp_manager == null:
-		return
-
-	var pickup := xp_pickup_scene.instantiate() as XPPickupController
-	if pickup == null:
-		return
-
-	pickup.global_position = drop_position
-	pickup.amount = amount
-	pickup.configure_from_tuning(run_tuning)
-
-	var container := _pickup_container if _pickup_container != null else get_tree().current_scene
-	container.add_child(pickup)
-	pickup.scatter(combat_feedback)
-	pickup.collected.connect(_on_xp_pickup_collected)
-
-
-func _on_xp_pickup_collected(amount: int) -> void:
-	if _xp_manager != null:
-		_xp_manager.gain_experience(amount)
-
-
-func _play_camera_shake() -> void:
-	if _camera == null or combat_feedback == null:
-		return
-
-	var original_offset := _camera.offset
-	var shake_strength := float(combat_feedback.get("camera_shake_strength"))
-	var shake_duration := float(combat_feedback.get("camera_shake_duration"))
-	var tween := create_tween()
-	tween.tween_property(_camera, "offset", Vector2(randf_range(-shake_strength, shake_strength), randf_range(-shake_strength, shake_strength)), shake_duration * 0.5)
-	tween.tween_property(_camera, "offset", original_offset, shake_duration * 0.5)

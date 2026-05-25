@@ -143,6 +143,50 @@
 3. 再持续整理 `resources/upgrades/`、`resources/modules/` 的新增资源，保持分组不回退成扁平结构。
 4. 最后整理 `docs/` 的长期归档结构。
 
+## 已完成阶段
+
+截至当前版本，下面这些整理已经落地：
+
+1. `scripts/game/` 已拆分为 `scripts/run/` 与 `scripts/enemies/`。
+2. `scenes/environment/`、`scripts/environment/`、`resources/environment/` 已统一迁到 `world/`。
+3. `resources/modules/` 已拆为 `fire_modes/` 与 `payloads/`。
+4. `resources/upgrades/` 已拆为 `pools/`、`modules/`、`general/`、`economy/`。
+5. `docs/` 已整理为 `architecture/`、`content/`、`art/` 等长期目录。
+6. `scripts/dev/project_sanity_check.gd` 已从单文件大检查拆为多文件调度结构：
+   - `sanity_context.gd`
+   - `world_map_checks.gd`
+   - `progression_checks.gd`
+   - `enemy_combat_checks.gd`
+   - `ui_run_profile_checks.gd`
+7. `scripts/run/run_manager.gd` 已完成第一轮收敛，目标事件、升级暂停流程、掉落与镜头反馈已下沉到独立控制器：
+   - `run_objective_controller.gd`
+   - `run_level_flow_controller.gd`
+   - `run_combat_reward_controller.gd`
+
+## 当前状态
+
+当前目录层面的主重构已经基本闭环，后续重点不再是继续搬目录，而是控制运行时代码复杂度。
+
+现阶段的工作重点应转为：
+
+1. 保持新增资源继续遵守现有分组，不回退到扁平结构。
+2. 保持新增检查优先进入对应的 `scripts/dev/*_checks.gd` 文件，而不是继续堆回入口。
+3. 继续收敛仍然偏胖的运行时代码入口，优先关注：
+   - `scripts/run/run_manager.gd`
+   - `scripts/enemies/enemy_controller.gd`
+   - `scripts/world/arena_visual.gd`
+
+## 后续优先级
+
+推荐后续按这个顺序继续：
+
+1. 继续瘦 `enemy_controller.gd`
+   - 优先把导航、状态切换、Boss 技能状态等进一步下沉。
+2. 继续瘦 `arena_visual.gd`
+   - 优先把障碍/危险区重建和绘制层逻辑继续拆小。
+3. 如果需要扩玩法，再进入 `run_manager.gd` 第二轮整理
+   - 例如把地图初始化和 HUD 绑定也进一步抽到更细的编排层。
+
 ## 当前目标结构草案
 
 ```text

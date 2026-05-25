@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://resources/maps/map_data.gd" id="1_map"]
 [ext_resource type="Resource" path="res://resources/runs/cyber_test_zone_run_tuning.tres" id="2_tuning"]
-[ext_resource type="Resource" path="res://resources/environment/cyber_test_zone_visual.tres" id="3_visual"]
+[ext_resource type="Resource" path="res://resources/world/cyber_test_zone_visual.tres" id="3_visual"]
 [ext_resource type="Resource" path="res://resources/maps/cyber_test_zone_tile_library.tres" id="4_tiles"]
 
 [resource]

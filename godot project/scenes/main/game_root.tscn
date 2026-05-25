@@ -8,8 +8,8 @@
 [ext_resource type="Script" path="res://scripts/progression/upgrade_manager.gd" id="6_upgrade"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="7_hud"]
 [ext_resource type="PackedScene" path="res://scenes/ui/level_up_panel.tscn" id="8_level_panel"]
-[ext_resource type="PackedScene" path="res://scenes/environment/arena_bounds.tscn" id="9_arena"]
-[ext_resource type="PackedScene" path="res://scenes/environment/arena_visual.tscn" id="10_arena_visual"]
+[ext_resource type="PackedScene" path="res://scenes/world/arena_bounds.tscn" id="9_arena"]
+[ext_resource type="PackedScene" path="res://scenes/world/arena_visual.tscn" id="10_arena_visual"]
 
 [node name="GameRoot" type="Node2D"]
 script = ExtResource("1_run")

@@ -97,7 +97,7 @@ func _check_collision_scene(scene_path: String, expected_layer: int, expected_ma
 
 
 func _check_arena_bounds_scene() -> void:
-	var instance := _instantiate_scene("res://scenes/environment/arena_bounds.tscn")
+	var instance := _instantiate_scene("res://scenes/world/arena_bounds.tscn")
 	if instance == null:
 		return
 
@@ -114,7 +114,7 @@ func _check_arena_bounds_scene() -> void:
 
 
 func _check_arena_visual_scene() -> void:
-	var instance := _instantiate_scene("res://scenes/environment/arena_visual.tscn")
+	var instance := _instantiate_scene("res://scenes/world/arena_visual.tscn")
 	if instance == null:
 		return
 
@@ -151,7 +151,7 @@ func _check_arena_visual_scene() -> void:
 
 
 func _check_arena_hazards() -> void:
-	var instance := _instantiate_scene("res://scenes/environment/arena_visual.tscn")
+	var instance := _instantiate_scene("res://scenes/world/arena_visual.tscn")
 	if instance == null:
 		return
 

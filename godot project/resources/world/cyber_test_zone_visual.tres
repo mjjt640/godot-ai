@@ -1,8 +1,8 @@
 [gd_resource type="Resource" script_class="ArenaVisualData" load_steps=15 format=3]
 
-[ext_resource type="Script" path="res://resources/environment/arena_visual_data.gd" id="1_visual"]
-[ext_resource type="Script" path="res://resources/environment/obstacle_data.gd" id="2_obstacle"]
-[ext_resource type="Script" path="res://resources/environment/hazard_data.gd" id="3_hazard"]
+[ext_resource type="Script" path="res://resources/world/arena_visual_data.gd" id="1_visual"]
+[ext_resource type="Script" path="res://resources/world/obstacle_data.gd" id="2_obstacle"]
+[ext_resource type="Script" path="res://resources/world/hazard_data.gd" id="3_hazard"]
 
 [sub_resource type="Resource" id="ObstacleData_nw_wall"]
 script = ExtResource("2_obstacle")
@@ -96,5 +96,5 @@ panel_line_width = 2.0
 neon_lane_interval = 640.0
 neon_line_width = 3.0
 boundary_line_width = 5.0
-obstacles = Array[Resource("res://resources/environment/obstacle_data.gd")]([SubResource("ObstacleData_nw_wall"), SubResource("ObstacleData_nw_machine"), SubResource("ObstacleData_ne_wall"), SubResource("ObstacleData_ne_terminal"), SubResource("ObstacleData_w_cable"), SubResource("ObstacleData_e_cable"), SubResource("ObstacleData_sw_barrier"), SubResource("ObstacleData_sw_reactor"), SubResource("ObstacleData_se_barrier"), SubResource("ObstacleData_se_reactor")])
-hazards = Array[Resource("res://resources/environment/hazard_data.gd")]([SubResource("HazardData_north_leak"), SubResource("HazardData_south_leak")])
+obstacles = Array[Resource("res://resources/world/obstacle_data.gd")]([SubResource("ObstacleData_nw_wall"), SubResource("ObstacleData_nw_machine"), SubResource("ObstacleData_ne_wall"), SubResource("ObstacleData_ne_terminal"), SubResource("ObstacleData_w_cable"), SubResource("ObstacleData_e_cable"), SubResource("ObstacleData_sw_barrier"), SubResource("ObstacleData_sw_reactor"), SubResource("ObstacleData_se_barrier"), SubResource("ObstacleData_se_reactor")])
+hazards = Array[Resource("res://resources/world/hazard_data.gd")]([SubResource("HazardData_north_leak"), SubResource("HazardData_south_leak")])

@@ -139,7 +139,7 @@
 为了降低风险，目录整理分阶段执行：
 
 1. 先拆 `scripts/game/`，把单局编排迁到 `scripts/run/`，把敌人逻辑迁到 `scripts/enemies/`。
-2. 再把 `scenes/environment/`、`scripts/environment/`、`resources/environment/` 统一迁到 `world/`。
+2. 再把 `scenes/world/`、`scripts/world/`、`resources/world/` 统一到同一命名口径并补齐子目录。
 3. 再拆 `resources/upgrades/`、`resources/modules/` 的扁平目录。
 4. 最后整理 `docs/` 的长期归档结构。
 

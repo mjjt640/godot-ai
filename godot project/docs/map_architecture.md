@@ -27,7 +27,7 @@
 ## 新增地图流程
 
 1. 在 `resources/runs/` 下新建该地图的 `RunTuningData`。
-2. 在 `resources/environment/` 或后续地图子目录下新建该地图的 `ArenaVisualData`。
+2. 在 `resources/world/` 或后续地图子目录下新建该地图的 `ArenaVisualData`。
 3. 在 `resources/maps/` 下新建该地图的 `MapTileLibraryData`，把地砖、贴花、霓虹细节、危险区视觉按用途分类。
 4. 在 `resources/maps/` 下新建该地图的 `MapData`，引用上面三个资源。
 5. 如需临时测试，把 `RunManager.map_data` 指向新 `MapData`。

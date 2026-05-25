@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="ArenaVisualData" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://resources/world/arena_visual_data.gd" id="1_visual"]
+[ext_resource type="Resource" path="res://resources/world/obstacle_left_ruin.tres" id="2_left"]
+[ext_resource type="Resource" path="res://resources/world/obstacle_right_ruin.tres" id="3_right"]
+[ext_resource type="Resource" path="res://resources/world/obstacle_top_stone.tres" id="4_top"]
+[ext_resource type="Resource" path="res://resources/world/hazard_center_burn.tres" id="5_center_hazard"]
+[ext_resource type="Resource" path="res://resources/world/hazard_north_burn.tres" id="6_north_hazard"]
+
+[resource]
+script = ExtResource("1_visual")
+arena_color = Color(0.045, 0.052, 0.072, 1)
+grid_color = Color(0.07, 0.23, 0.26, 0.44)
+panel_line_color = Color(0.012, 0.015, 0.022, 0.82)
+crack_color = Color(0.004, 0.005, 0.009, 0.88)
+neon_cyan_color = Color(0, 0.92, 0.95, 0.62)
+neon_pink_color = Color(1, 0.08, 0.62, 0.52)
+boundary_color = Color(0, 0.9, 0.92, 0.78)
+boundary_glow_color = Color(1, 0.08, 0.62, 0.24)
+grid_size = 128.0
+panel_size = 384.0
+panel_line_width = 2.0
+neon_lane_interval = 512.0
+neon_line_width = 3.0
+boundary_line_width = 5.0
+obstacles = Array[Resource("res://resources/world/obstacle_data.gd")]([ExtResource("2_left"), ExtResource("3_right"), ExtResource("4_top")])
+hazards = Array[Resource("res://resources/world/hazard_data.gd")]([ExtResource("5_center_hazard"), ExtResource("6_north_hazard")])

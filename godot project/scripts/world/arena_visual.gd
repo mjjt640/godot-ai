@@ -2,7 +2,7 @@ class_name ArenaVisual
 extends Node2D
 
 const CollisionLayers = preload("res://scripts/config/collision_layers.gd")
-const ArenaVisualDrawLayerScript = preload("res://scripts/environment/arena_visual_draw_layer.gd")
+const ArenaVisualDrawLayerScript = preload("res://scripts/world/arena_visual_draw_layer.gd")
 
 const DRAW_LAYER_GROUND_BASE := 0
 const DRAW_LAYER_GROUND_DETAIL := 1
@@ -21,7 +21,7 @@ const LAYER_DEFINITIONS := [
 ]
 
 @export var run_tuning: RunTuningData = preload("res://resources/runs/default_run_tuning.tres")
-@export var visual_data: Resource = preload("res://resources/environment/default_arena_visual.tres")
+@export var visual_data: Resource = preload("res://resources/world/default_arena_visual.tres")
 
 var _layers: Dictionary = {}
 var _draw_layers: Array[Node2D] = []

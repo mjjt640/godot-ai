@@ -18,7 +18,7 @@ func _initialize() -> void:
 
 
 func _run() -> void:
-	var arena := _instantiate_scene("res://scenes/environment/arena_visual.tscn") as ArenaVisual
+	var arena := _instantiate_scene("res://scenes/world/arena_visual.tscn") as ArenaVisual
 	if arena == null:
 		_finish()
 		return

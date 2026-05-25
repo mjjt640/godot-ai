@@ -3,6 +3,9 @@ extends SceneTree
 const CollisionLayers = preload("res://scripts/config/collision_layers.gd")
 const DashEnemySkillDataScript = preload("res://resources/enemies/skills/dash_enemy_skill_data.gd")
 const GameText = preload("res://scripts/ui/game_text.gd")
+const SanityContextScript = preload("res://scripts/dev/sanity_context.gd")
+const WorldMapChecksScript = preload("res://scripts/dev/world_map_checks.gd")
+const ProgressionChecksScript = preload("res://scripts/dev/progression_checks.gd")
 const ENEMY_BEHAVIOR_PRESSURE := 2
 const ENEMY_BEHAVIOR_SHIELD := 3
 
@@ -19,6 +22,12 @@ class DamageProbe:
 
 var _failures: Array[String] = []
 var _removed_xp_movement_key := "xp_magnet" + "_speed"
+var _world_map_checks = WorldMapChecksScript.new()
+var _progression_checks = ProgressionChecksScript.new()
+
+
+func _ctx():
+	return SanityContextScript.new(self, root, _failures, _removed_xp_movement_key)
 
 
 func _initialize() -> void:
@@ -100,180 +109,31 @@ func _check_collision_scene(scene_path: String, expected_layer: int, expected_ma
 
 
 func _check_arena_bounds_scene() -> void:
-	var instance := _instantiate_scene("res://scenes/world/arena_bounds.tscn")
-	if instance == null:
-		return
-
-	root.add_child(instance)
-	_expect(instance.get_child_count() == 4, "ArenaBounds should create four world walls")
-	for child in instance.get_children():
-		var wall := child as StaticBody2D
-		if wall == null:
-			_failures.append("ArenaBounds child %s is not StaticBody2D" % child.name)
-		else:
-			_expect(wall.collision_layer == CollisionLayers.WORLD, "ArenaBounds wall %s should use WORLD layer" % wall.name)
-			_expect(wall.collision_mask == 0, "ArenaBounds wall %s should not scan masks" % wall.name)
-	_remove_instance(instance)
+	_world_map_checks.call("check_arena_bounds_scene", _ctx(), CollisionLayers)
 
 
 func _check_arena_visual_scene() -> void:
-	var instance := _instantiate_scene("res://scenes/world/arena_visual.tscn")
-	if instance == null:
-		return
-
-	root.add_child(instance)
-	var expected_layers := [
-		"GroundBaseLayer",
-		"GroundDetailLayer",
-		"NeonDetailLayer",
-		"PropVisualLayer",
-		"HazardVisualLayer",
-		"BoundaryVisualLayer",
-		"WorldCollisionLayer",
-		"HazardAreaLayer",
-	]
-	var previous_z_index := -1000000
-	for layer_name in expected_layers:
-		var layer := instance.get_node_or_null(layer_name) as Node2D
-		_expect(layer != null, "ArenaVisual should include %s" % layer_name)
-		if layer != null:
-			_expect(layer.z_index > previous_z_index, "ArenaVisual layer %s should keep stable ascending z_index order" % layer_name)
-			previous_z_index = layer.z_index
-
-	var world_collision_layer := instance.get_node_or_null("WorldCollisionLayer")
-	_expect(world_collision_layer != null, "ArenaVisual should isolate obstacle collision in WorldCollisionLayer")
-	var obstacle_count := 0
-	for child in _collect_descendants(world_collision_layer):
-		if child is StaticBody2D:
-			obstacle_count += 1
-			var obstacle := child as StaticBody2D
-			_expect(obstacle.collision_layer == CollisionLayers.WORLD, "ArenaVisual obstacle %s should use WORLD layer" % obstacle.name)
-			_expect(obstacle.collision_mask == 0, "ArenaVisual obstacle %s should not scan masks" % obstacle.name)
-	_expect(obstacle_count > 0, "ArenaVisual should create resource-driven obstacles")
-	_remove_instance(instance)
+	_world_map_checks.call("check_arena_visual_scene", _ctx(), CollisionLayers)
 
 
 func _check_arena_hazards() -> void:
-	var instance := _instantiate_scene("res://scenes/world/arena_visual.tscn")
-	if instance == null:
-		return
-
-	root.add_child(instance)
-	var hazard_area_layer := instance.get_node_or_null("HazardAreaLayer")
-	_expect(hazard_area_layer != null, "ArenaVisual should isolate hazard gameplay areas in HazardAreaLayer")
-	var hazards: Array[Area2D] = []
-	for child in _collect_descendants(hazard_area_layer):
-		if child is Area2D and child.name.begins_with("Hazard"):
-			hazards.append(child)
-	_expect(not hazards.is_empty(), "ArenaVisual should create resource-driven hazards")
-	if not hazards.is_empty():
-		var hazard := hazards[0]
-		_expect(hazard.collision_layer == 0, "ArenaVisual hazard should not block physical movement")
-		_expect(hazard.collision_mask == CollisionLayers.PLAYER, "ArenaVisual hazard should only scan player layer")
-		_expect(hazard.get_node_or_null("DamageTimer") != null, "ArenaVisual hazard should create periodic damage timer")
-	_remove_instance(instance)
+	_world_map_checks.call("check_arena_hazards", _ctx(), CollisionLayers)
 
 
 func _check_world_resource_grouping() -> void:
-	var map_data_source := FileAccess.get_file_as_string("res://resources/maps/map_data.gd")
-	_expect(map_data_source.find("res://resources/world/visuals/arena_visual_data.gd") >= 0, "MapData should preload ArenaVisualData from resources/world/visuals")
-
-	var arena_visual_source := FileAccess.get_file_as_string("res://scripts/world/arena_visual.gd")
-	_expect(arena_visual_source.find("res://resources/world/visuals/default_arena_visual.tres") >= 0, "ArenaVisual should load default visual data from resources/world/visuals")
-
-	var default_map := load("res://resources/maps/default_map.tres") as MapData
-	if default_map != null and default_map.visual_data != null:
-		var visual_path := String(default_map.visual_data.resource_path)
-		_expect(visual_path.contains("/resources/world/visuals/"), "Default map visual resource should live under resources/world/visuals")
-
-	var default_visual := load("res://resources/world/visuals/default_arena_visual.tres") as ArenaVisualData
-	_expect(default_visual != null, "Default arena visual resource should exist under resources/world/visuals")
-	if default_visual != null:
-		for obstacle in default_visual.obstacles:
-			if obstacle == null:
-				continue
-			var obstacle_path := String(obstacle.resource_path)
-			_expect(obstacle_path.contains("/resources/world/obstacles/"), "ArenaVisualData obstacles should live under resources/world/obstacles")
-		for hazard in default_visual.hazards:
-			if hazard == null:
-				continue
-			var hazard_path := String(hazard.resource_path)
-			_expect(hazard_path.contains("/resources/world/hazards/"), "ArenaVisualData hazards should live under resources/world/hazards")
-
-	_expect(FileAccess.file_exists("res://resources/world/visuals/arena_visual_data.gd"), "ArenaVisualData script should live under resources/world/visuals")
-	_expect(FileAccess.file_exists("res://resources/world/hazards/hazard_data.gd"), "HazardData script should live under resources/world/hazards")
-	_expect(FileAccess.file_exists("res://resources/world/obstacles/obstacle_data.gd"), "ObstacleData script should live under resources/world/obstacles")
+	_world_map_checks.call("check_world_resource_grouping", _ctx())
 
 
 func _check_default_map_data() -> void:
-	var map_data := load("res://resources/maps/default_map.tres")
-	_expect(map_data != null, "Default map data should exist")
-	if map_data == null:
-		return
-
-	_expect(map_data.get("id") == &"cyber_test_zone", "Default map should point to the first playable cyber test zone")
-	_expect(map_data.get("run_tuning") != null, "Default map data should reference run tuning")
-	_expect(map_data.get("visual_data") != null, "Default map data should reference arena visual data")
-	var run_tuning := map_data.get("run_tuning") as RunTuningData
-	if run_tuning != null:
-		_expect(run_tuning.arena_half_extents.x >= 2400.0, "First playable map should be wide enough for survivor-style roaming")
-		_expect(run_tuning.arena_half_extents.y >= 1500.0, "First playable map should be tall enough for survivor-style roaming")
-		_expect(run_tuning.minimum_spawn_distance < run_tuning.spawn_radius, "First playable map should leave spawn ring space")
-	var visual_data: Resource = map_data.get("visual_data") as Resource
-	if visual_data != null:
-		var obstacles: Array = visual_data.get("obstacles") as Array
-		var hazards: Array = visual_data.get("hazards") as Array
-		_expect(obstacles.size() >= 8, "First playable map should reuse simple obstacle chunks across a large arena")
-		_expect(obstacles.size() <= 16, "First playable map should stay simple and avoid maze-like obstacle density")
-		_expect(hazards.size() <= 2, "First playable map should keep hazards sparse while testing roaming")
-	_expect(map_data.get("tile_library") != null, "Default map data should reference a tile library")
-
-	var run_manager_source := FileAccess.get_file_as_string("res://scripts/run/run_manager.gd")
-	_expect(run_manager_source.find("@export var map_data") >= 0, "RunManager should expose a single map_data selection resource")
-	_expect(run_manager_source.find("map_data.get(\"run_tuning\")") >= 0, "RunManager should read run tuning from map_data")
-	_expect(run_manager_source.find("map_data.get(\"visual_data\")") >= 0, "RunManager should read arena visuals from map_data")
+	_world_map_checks.call("check_default_map_data", _ctx())
 
 
 func _check_default_map_tile_library() -> void:
-	var map_data := load("res://resources/maps/default_map.tres")
-	if map_data == null:
-		return
-
-	var tile_library: Resource = map_data.get("tile_library") as Resource
-	_expect(tile_library != null, "Default map tile library should exist")
-	if tile_library == null:
-		return
-
-	_expect(tile_library.get("tile_size") == Vector2i(256, 256), "Cyber test zone tiles should keep 256x256 source cells")
-	_expect((tile_library.get("ground_base_tiles") as Array).size() >= 6, "Cyber test zone should have enough base ground tiles")
-	_expect((tile_library.get("ground_detail_tiles") as Array).size() >= 6, "Cyber test zone should have enough detail ground tiles")
-	_expect((tile_library.get("neon_detail_tiles") as Array).size() >= 4, "Cyber test zone should have neon detail tiles")
-	_expect((tile_library.get("decals") as Array).size() >= 16, "Cyber test zone should have transparent decal assets")
-	_expect((tile_library.get("hazard_visuals") as Array).size() >= 16, "Cyber test zone should have hazard visual assets")
-	_expect((tile_library.get("hazard_ground_tiles") as Array).size() >= 16, "Cyber test zone should have hazard ground tile assets")
-
-	for property_name in [
-		"ground_base_tiles",
-		"ground_detail_tiles",
-		"neon_detail_tiles",
-		"decals",
-		"hazard_visuals",
-		"hazard_ground_tiles",
-	]:
-		for texture in tile_library.get(property_name):
-			_expect(texture is Texture2D, "Map tile library %s should only contain Texture2D entries" % property_name)
+	_world_map_checks.call("check_default_map_tile_library", _ctx())
 
 
 func _check_game_root_scene() -> void:
-	var instance := _instantiate_scene("res://scenes/main/game_root.tscn")
-	if instance == null:
-		return
-
-	root.add_child(instance)
-	_expect(instance.get_node_or_null("ArenaVisual") != null, "GameRoot should include ArenaVisual")
-	_expect(instance.get_node_or_null("ArenaBounds") != null, "GameRoot should include ArenaBounds")
-	_expect(instance.get_node_or_null("Pickups") != null, "GameRoot should include Pickups container")
-	_remove_instance(instance)
+	_world_map_checks.call("check_game_root_scene", _ctx())
 
 
 func _check_special_enemy_scene(scene_path: String, expects_boss: bool) -> void:
@@ -1098,47 +958,11 @@ func _check_luck_increases_high_rarity_weight() -> void:
 
 
 func _check_default_character_resource() -> void:
-	var character := load("res://resources/characters/character_core_runner.tres")
-	if character == null:
-		_failures.append("Failed to load default character resource")
-		return
-
-	_check_character_fields(character, "Default character")
-
-	var template := load("res://resources/characters/character_template.tres")
-	if template == null:
-		_failures.append("Failed to load character template resource")
-	else:
-		_check_character_fields(template, "Character template")
-
-	var player := _instantiate_scene("res://scenes/player/player.tscn") as PlayerController
-	if player == null:
-		return
-	root.add_child(player)
-	_expect(player.character_data != null, "Player scene should assign default character_data")
-	if player.character_data != null:
-		_expect(is_equal_approx(player.move_speed, float(player.character_data.get("move_speed"))), "Player should apply character move_speed")
-		_expect(is_equal_approx(player.max_health, float(player.character_data.get("max_health"))), "Player should apply character max_health")
-		_expect(is_equal_approx(player.get_luck(), float(player.character_data.get("luck"))), "Player should apply character luck")
-	_remove_instance(player)
+	_progression_checks.call("check_default_character_resource", _ctx())
 
 
 func _check_default_character_pool() -> void:
-	var pool := load("res://resources/characters/default_character_pool.tres") as Resource
-	if pool == null:
-		_failures.append("Failed to load default character pool")
-		return
-
-	var characters: Array = pool.get("characters")
-	_expect(not characters.is_empty(), "Default character pool needs at least one character")
-	_expect(characters.size() >= 3, "Default character pool should include first-pass character variety")
-	var default_character: Resource = pool.call("get_default_character") as Resource
-	_expect(default_character != null, "Default character pool should resolve default character")
-	for character in characters:
-		if character != null:
-			_check_character_fields(character, "Pooled character %s" % character.get("id"))
-	if default_character != null:
-		_check_character_fields(default_character, "Default pooled character")
+	_progression_checks.call("check_default_character_pool", _ctx())
 
 
 func _check_character_fields(character: Resource, label: String) -> void:
@@ -1159,302 +983,27 @@ func _check_character_fields(character: Resource, label: String) -> void:
 
 
 func _check_upgrade_pool() -> void:
-	var pool := load("res://resources/upgrades/pools/default_upgrade_pool.tres") as UpgradePoolData
-	if pool == null:
-		_failures.append("Failed to load default upgrade pool")
-		return
-
-	var option_count: int = pool.option_count
-	var options: Array = pool.options
-	_expect(option_count == 3, "Default upgrade pool should present three options")
-	_expect(pool.max_module_count > 0, "Default upgrade pool should configure a positive module cap")
-	_expect(pool.common_rarity_weight > pool.rare_rarity_weight, "Common upgrades should refresh more often than rare upgrades")
-	_expect(pool.rare_rarity_weight > pool.epic_rarity_weight, "Rare upgrades should refresh more often than epic upgrades")
-	_expect(pool.epic_rarity_weight > pool.legendary_rarity_weight, "Epic upgrades should refresh more often than legendary upgrades")
-	_expect(options.size() >= option_count, "Default upgrade pool needs enough options")
-	for option in options:
-		_expect(option != null, "Upgrade pool should not contain null options")
-		if option != null:
-			_expect(option.display_name != "", "Upgrade option %s needs Chinese display_name" % option.id)
-			_expect(option.weight > 0.0, "Upgrade option %s needs positive weight" % option.id)
-			_expect(pool.get_rarity_weight(option.rarity) > 0.0, "Upgrade option %s needs positive rarity weight" % option.id)
-			_expect(option.upgrade_type == UpgradeOptionData.UpgradeType.MODULE, "Default upgrade pool should only install modules: %s" % option.id)
-			_expect(option.module != null, "Module upgrade %s needs module data" % option.id)
-			_expect(option.stat_modifiers.is_empty(), "Module install option %s should not carry stat_modifiers" % option.id)
-			_expect(option.general_modifiers.is_empty(), "Module install option %s should not carry general_modifiers" % option.id)
-			if option.module != null:
-				_expect(int(option.module.rarity) == int(option.rarity), "Module upgrade %s should match module rarity" % option.id)
+	_progression_checks.call("check_upgrade_pool", _ctx())
 
 
 func _check_module_skill_pool() -> void:
-	var pool := load("res://resources/upgrades/pools/default_module_skill_pool.tres") as UpgradePoolData
-	if pool == null:
-		_failures.append("Failed to load default module skill pool")
-		return
-
-	var effect_stat_option_count := 0
-	var has_blast_radius_boost := false
-	var has_splash_damage_boost := false
-	var has_luck_boost := false
-	var has_attack_speed_boost := false
-	var has_attack_range_boost := false
-	var has_crit_chance_boost := false
-	var has_crit_damage_boost := false
-	var has_piercing_firepower := false
-	var has_wide_spread := false
-	var has_blast_aftershock := false
-	var has_legendary_option := false
-	_expect(pool.option_count == 3, "Default module skill pool should present three options")
-	_expect(pool.common_rarity_weight > pool.rare_rarity_weight, "Module skill common weight should exceed rare weight")
-	_expect(pool.rare_rarity_weight > pool.epic_rarity_weight, "Module skill rare weight should exceed epic weight")
-	_expect(pool.epic_rarity_weight > pool.legendary_rarity_weight, "Module skill epic weight should exceed legendary weight")
-	for option in pool.options:
-		_expect(option != null, "Module skill pool should not contain null options")
-		if option == null:
-			continue
-		_expect(option.display_name != "", "Module skill %s needs Chinese display_name" % option.id)
-		_expect(option.weight > 0.0, "Module skill %s needs positive weight" % option.id)
-		_expect(option.upgrade_type == UpgradeOptionData.UpgradeType.STAT, "Module skill %s should use STAT type" % option.id)
-		_expect(not option.stat_modifiers.is_empty(), "Module skill %s should declare stat_modifiers" % option.id)
-		_expect(option.general_modifiers.is_empty(), "Module skill %s should not use general_modifiers" % option.id)
-		_expect(not option.required_module_ids.is_empty(), "Module skill %s should declare required_module_ids" % option.id)
-		_expect(pool.get_rarity_weight(option.rarity) > 0.0, "Module skill %s needs positive rarity weight" % option.id)
-		if option.rarity == UpgradeOptionData.Rarity.LEGENDARY:
-			has_legendary_option = true
-		if not option.stat_modifiers.is_empty():
-			effect_stat_option_count += 1
-			_expect(not (option.stat_modifiers.has(&"explosion_radius_add") and option.stat_modifiers.has(&"explosion_damage_mult_add")), "Module skill %s should not mix explosion radius and splash damage" % option.id)
-			if option.stat_modifiers.has(&"explosion_radius_add"):
-				has_blast_radius_boost = true
-			if option.stat_modifiers.has(&"explosion_damage_mult_add"):
-				has_splash_damage_boost = true
-			if option.stat_modifiers.has(&"luck_add"):
-				has_luck_boost = true
-			if option.stat_modifiers.has(&"attack_speed_add"):
-				has_attack_speed_boost = true
-			if option.stat_modifiers.has(&"attack_range_add"):
-				has_attack_range_boost = true
-			if option.stat_modifiers.has(&"crit_chance_add"):
-				has_crit_chance_boost = true
-			if option.stat_modifiers.has(&"crit_damage_mult_add"):
-				has_crit_damage_boost = true
-		if option.id == &"upgrade_piercing_firepower":
-			has_piercing_firepower = true
-			_expect(option.required_module_ids.has(&"piercing_round"), "Piercing firepower should depend on piercing module")
-		if option.id == &"upgrade_wide_spread":
-			has_wide_spread = true
-			_expect(option.required_module_ids.has(&"spread_fire"), "Wide spread should depend on spread fire module")
-		if option.id == &"upgrade_blast_aftershock":
-			has_blast_aftershock = true
-			_expect(option.required_module_ids.has(&"explosive_payload"), "Blast aftershock should depend on explosive payload module")
-	_expect(effect_stat_option_count >= 8, "Default module skill pool should include resource-driven module skills")
-	_expect(has_blast_radius_boost, "Default upgrade pool should include a separate blast radius upgrade")
-	_expect(has_splash_damage_boost, "Default upgrade pool should include a separate splash damage upgrade")
-	_expect(has_luck_boost, "Default module skill pool should include luck module skill")
-	_expect(has_attack_speed_boost, "Default module skill pool should include attack speed module skill")
-	_expect(has_attack_range_boost, "Default module skill pool should include attack range module skill")
-	_expect(has_crit_chance_boost, "Default module skill pool should include crit chance module skill")
-	_expect(has_crit_damage_boost, "Default module skill pool should include crit damage module skill")
-	_expect(has_piercing_firepower, "Default module skill pool should include piercing firepower upgrade")
-	_expect(has_wide_spread, "Default module skill pool should include wide spread upgrade")
-	_expect(has_blast_aftershock, "Default module skill pool should include blast aftershock upgrade")
-	_expect(has_legendary_option, "Default upgrade pool should include at least one legendary option")
+	_progression_checks.call("check_module_skill_pool", _ctx())
 
 
 func _check_general_skill_pool() -> void:
-	var pool := load("res://resources/upgrades/pools/default_general_skill_pool.tres") as UpgradePoolData
-	if pool == null:
-		_failures.append("Failed to load default general skill pool")
-		return
-
-	var has_magnet_range := false
-	var has_health_recovery := false
-	var has_move_speed := false
-	var has_xp_gain := false
-	var has_legendary_xp_gain := false
-	var has_epic_magnet_multiplier := false
-	var magnet_rarities: Array[int] = []
-	var health_rarities: Array[int] = []
-	var move_speed_rarities: Array[int] = []
-	var xp_gain_rarities: Array[int] = []
-	_expect(pool.common_rarity_weight > pool.rare_rarity_weight, "General skill pool common weight should exceed rare weight")
-	_expect(pool.rare_rarity_weight > pool.epic_rarity_weight, "General skill pool rare weight should exceed epic weight")
-	_expect(pool.epic_rarity_weight > pool.legendary_rarity_weight, "General skill pool epic weight should exceed legendary weight")
-	for option in pool.options:
-		_expect(option != null, "General skill pool should not contain null options")
-		if option == null:
-			continue
-		_expect(option.upgrade_type == UpgradeOptionData.UpgradeType.GENERAL, "General skill %s should use GENERAL upgrade type" % option.id)
-		_expect(not option.general_modifiers.is_empty(), "General skill %s should declare general_modifiers" % option.id)
-		_expect(option.stat_modifiers.is_empty(), "General skill %s should not use weapon stat_modifiers" % option.id)
-		_expect(not _has_module_skill_stat(option.general_modifiers), "General skill %s should not use module skill stats" % option.id)
-		if option.general_modifiers.has(&"xp_magnet_radius_add"):
-			has_magnet_range = true
-			magnet_rarities.append(option.rarity)
-		if option.general_modifiers.has(&"xp_magnet_radius_mult"):
-			has_epic_magnet_multiplier = has_epic_magnet_multiplier or option.rarity == UpgradeOptionData.Rarity.EPIC
-		if option.general_modifiers.has(&"heal_add"):
-			has_health_recovery = true
-			health_rarities.append(option.rarity)
-		if option.general_modifiers.has(&"move_speed_add") or option.general_modifiers.has(&"move_speed_mult"):
-			has_move_speed = true
-			move_speed_rarities.append(option.rarity)
-		if option.general_modifiers.has(&"xp_gain_mult"):
-			has_xp_gain = true
-			xp_gain_rarities.append(option.rarity)
-			if option.rarity == UpgradeOptionData.Rarity.LEGENDARY:
-				has_legendary_xp_gain = true
-		elif option.rarity == UpgradeOptionData.Rarity.LEGENDARY:
-			_failures.append("Only XP gain general skills should have legendary rarity: %s" % option.id)
-	_expect(has_magnet_range, "General skill pool should include XP magnet range skill")
-	_expect(has_health_recovery, "General skill pool should include health recovery skill")
-	_expect(has_move_speed, "General skill pool should include move speed skill")
-	_expect(has_xp_gain, "General skill pool should include XP gain speed skill")
-	_expect(has_legendary_xp_gain, "General skill pool should include legendary XP gain speed skill")
-	_expect(has_epic_magnet_multiplier, "General skill pool should include epic XP magnet multiplier skill")
-	_expect(_has_common_rare_epic(magnet_rarities), "XP magnet range should have common, rare and epic variants")
-	_expect(_has_common_rare_epic(health_rarities), "Health recovery should have common, rare and epic variants")
-	_expect(_has_common_rare_epic(move_speed_rarities), "Move speed should have common, rare and epic variants")
-	_expect(_has_common_rare_epic(xp_gain_rarities), "XP gain speed should have common, rare and epic variants")
+	_progression_checks.call("check_general_skill_pool", _ctx(), Callable(self, "_has_module_skill_stat"))
 
 
 func _check_upgrade_resource_grouping() -> void:
-	var module_install_pool_path := "res://resources/upgrades/pools/default_upgrade_pool.tres"
-	var module_skill_pool_path := "res://resources/upgrades/pools/default_module_skill_pool.tres"
-	var general_skill_pool_path := "res://resources/upgrades/pools/default_general_skill_pool.tres"
-	_expect(FileAccess.file_exists(module_install_pool_path), "Module install pool should live under resources/upgrades/pools")
-	_expect(FileAccess.file_exists(module_skill_pool_path), "Module skill pool should live under resources/upgrades/pools")
-	_expect(FileAccess.file_exists(general_skill_pool_path), "General skill pool should live under resources/upgrades/pools")
-
-	var module_install_pool := load(module_install_pool_path) as UpgradePoolData
-	var module_skill_pool := load(module_skill_pool_path) as UpgradePoolData
-	var general_skill_pool := load(general_skill_pool_path) as UpgradePoolData
-
-	if module_install_pool != null:
-		for option in module_install_pool.options:
-			if option == null:
-				continue
-			var option_path := String(option.resource_path)
-			_expect(option_path.contains("/resources/upgrades/modules/"), "Module install option should live under resources/upgrades/modules: %s" % option.id)
-			if option.module != null:
-				var module_path := String(option.module.resource_path)
-				_expect(
-					module_path.contains("/resources/modules/fire_modes/") or module_path.contains("/resources/modules/payloads/"),
-					"Installed module should live under fire_modes or payloads: %s" % option.id
-				)
-
-	if module_skill_pool != null:
-		for option in module_skill_pool.options:
-			if option == null:
-				continue
-			var option_path := String(option.resource_path)
-			_expect(option_path.contains("/resources/upgrades/modules/"), "Module skill option should live under resources/upgrades/modules: %s" % option.id)
-
-	if general_skill_pool != null:
-		for option in general_skill_pool.options:
-			if option == null:
-				continue
-			var option_path := String(option.resource_path)
-			_expect(
-				option_path.contains("/resources/upgrades/general/") or option_path.contains("/resources/upgrades/economy/"),
-				"General skill option should live under resources/upgrades/general or economy: %s" % option.id
-			)
-
-	var build_state_source := FileAccess.get_file_as_string("res://scripts/build/build_state.gd")
-	_expect(build_state_source.find("res://resources/modules/fire_modes/") >= 0, "BuildState should load default fire modules from resources/modules/fire_modes")
-	_expect(build_state_source.find("res://resources/modules/payloads/") >= 0, "BuildState should load default payload modules from resources/modules/payloads")
-
-	var upgrade_manager_source := FileAccess.get_file_as_string("res://scripts/progression/upgrade_manager.gd")
-	_expect(upgrade_manager_source.find("res://resources/upgrades/pools/default_upgrade_pool.tres") >= 0, "UpgradeManager should load module install pool from resources/upgrades/pools")
-	_expect(upgrade_manager_source.find("res://resources/upgrades/pools/default_module_skill_pool.tres") >= 0, "UpgradeManager should load module skill pool from resources/upgrades/pools")
-	_expect(upgrade_manager_source.find("res://resources/upgrades/pools/default_general_skill_pool.tres") >= 0, "UpgradeManager should load general skill pool from resources/upgrades/pools")
+	_progression_checks.call("check_upgrade_resource_grouping", _ctx())
 
 
 func _check_upgrade_filtering_rules() -> void:
-	var pool := load("res://resources/upgrades/pools/default_upgrade_pool.tres") as UpgradePoolData
-	var module_skill_pool := load("res://resources/upgrades/pools/default_module_skill_pool.tres") as UpgradePoolData
-	if pool == null or module_skill_pool == null:
-		return
-
-	var build_state := BuildState.new()
-	build_state.default_fire_mode = null
-	build_state.default_payload = null
-	root.add_child(build_state)
-
-	var upgrade_manager := UpgradeManager.new()
-	root.add_child(upgrade_manager)
-	upgrade_manager.upgrade_pool = pool
-	upgrade_manager.module_skill_pool = module_skill_pool
-	upgrade_manager._build_state = build_state
-
-	var pierce_boost := _find_upgrade_option(module_skill_pool, &"upgrade_pierce_boost")
-	if pierce_boost != null:
-		_expect(not upgrade_manager._can_offer(pierce_boost), "Pierce boost should not appear before piercing module is current")
-		var piercing_module := load("res://resources/modules/payloads/payload_piercing.tres") as ModuleData
-		build_state.install_module(piercing_module, false, false)
-		_expect(upgrade_manager._can_offer(pierce_boost), "Pierce boost should appear after piercing module is current")
-
-	var luck_boost := _find_upgrade_option(module_skill_pool, &"upgrade_luck_boost")
-	if luck_boost != null:
-		_expect(upgrade_manager._can_offer(luck_boost), "Luck boost should appear when a required starting module is current")
-
-	var module_option := _find_upgrade_option(pool, &"upgrade_burst_fire")
-	if module_option != null:
-		build_state.acquired_module_ids = [&"burst_fire"]
-		_expect(not upgrade_manager._can_offer(module_option), "Already acquired modules should wait for the future replacement path")
-		var capped_module_ids: Array[StringName] = []
-		for index in range(pool.max_module_count):
-			capped_module_ids.append(StringName("module_%d" % index))
-		build_state.acquired_module_ids = capped_module_ids
-		_expect(not upgrade_manager._can_offer(module_option), "Module upgrades should stop appearing after module cap")
-
-	_remove_instance(upgrade_manager)
-	_remove_instance(build_state)
+	_progression_checks.call("check_upgrade_filtering_rules", _ctx(), Callable(self, "_find_upgrade_option"))
 
 
 func _check_upgrade_pool_decoupling() -> void:
-	var empty_module_pool := UpgradePoolData.new()
-	empty_module_pool.options = []
-	empty_module_pool.option_count = 3
-
-	var module_skill_pool := UpgradePoolData.new()
-	module_skill_pool.option_count = 3
-	var stat_option := UpgradeOptionData.new()
-	stat_option.id = &"decoupled_stat_probe"
-	stat_option.display_name = "解耦强化"
-	stat_option.upgrade_type = UpgradeOptionData.UpgradeType.STAT
-	stat_option.stat_modifiers = {&"attack_range_add": 1.0}
-	stat_option.required_module_ids = [&"normal_payload"]
-	module_skill_pool.options = [stat_option]
-
-	var general_pool := UpgradePoolData.new()
-	general_pool.option_count = 3
-	var general_option := UpgradeOptionData.new()
-	general_option.id = &"decoupled_general_probe"
-	general_option.display_name = "解耦通用"
-	general_option.upgrade_type = UpgradeOptionData.UpgradeType.GENERAL
-	general_option.general_modifiers = {&"xp_magnet_radius_add": 1.0}
-	general_pool.options = [general_option]
-
-	var build_state := BuildState.new()
-	build_state.default_fire_mode = null
-	build_state.default_payload = null
-	root.add_child(build_state)
-	var normal_payload := load("res://resources/modules/payloads/payload_normal.tres") as ModuleData
-	build_state.install_module(normal_payload, false, false)
-
-	var upgrade_manager := UpgradeManager.new()
-	root.add_child(upgrade_manager)
-	upgrade_manager.upgrade_pool = empty_module_pool
-	upgrade_manager.module_skill_pool = module_skill_pool
-	upgrade_manager.general_skill_pool = general_pool
-	upgrade_manager._build_state = build_state
-
-	var options := upgrade_manager.request_options()
-	_expect(options.has(stat_option), "Module skill pool should still offer options when module install pool is empty")
-	_expect(options.has(general_option), "General skill pool should still offer options when module install pool is empty")
-	_remove_instance(upgrade_manager)
-	_remove_instance(build_state)
+	_progression_checks.call("check_upgrade_pool_decoupling", _ctx())
 
 
 
@@ -1570,38 +1119,11 @@ func _check_run_tuning() -> void:
 
 
 func _check_map_documentation() -> void:
-	var source := FileAccess.get_file_as_string("res://docs/architecture/map_architecture.md")
-	_expect(not source.is_empty(), "Map architecture documentation should exist")
-	_expect(source.find("MapData") >= 0, "Map architecture documentation should describe MapData")
-	_expect(source.find("ArenaVisual") >= 0, "Map architecture documentation should describe ArenaVisual")
-	_expect(source.find("ArenaBounds") >= 0, "Map architecture documentation should describe ArenaBounds")
-	_expect(source.find("WorldCollisionLayer") >= 0, "Map architecture documentation should describe collision layer ownership")
-	_expect(source.find("HazardAreaLayer") >= 0, "Map architecture documentation should describe hazard layer ownership")
+	_world_map_checks.call("check_map_documentation", _ctx())
 
 
 func _check_legacy_paths_removed() -> void:
-	for legacy_path in [
-		"res://docs/map_architecture.md",
-		"res://docs/project_structure.md",
-		"res://docs/character_asset_spec.md",
-		"res://docs/character_node_structure.md",
-		"res://resources/world/default_arena_visual.tres",
-		"res://resources/world/cyber_test_zone_visual.tres",
-		"res://resources/world/arena_visual_data.gd",
-		"res://resources/world/hazard_data.gd",
-		"res://resources/world/obstacle_data.gd",
-		"res://resources/upgrades/default_upgrade_pool.tres",
-		"res://resources/upgrades/default_module_skill_pool.tres",
-		"res://resources/upgrades/default_general_skill_pool.tres",
-		"res://resources/modules/fire_burst.tres",
-		"res://resources/modules/fire_quick_single.tres",
-		"res://resources/modules/fire_single_shot.tres",
-		"res://resources/modules/fire_spread.tres",
-		"res://resources/modules/payload_explosive.tres",
-		"res://resources/modules/payload_normal.tres",
-		"res://resources/modules/payload_piercing.tres",
-	]:
-		_expect(not FileAccess.file_exists(legacy_path), "Legacy path should be removed: %s" % legacy_path)
+	_world_map_checks.call("check_legacy_paths_removed", _ctx())
 
 
 func _check_run_objective() -> void:
@@ -1698,14 +1220,6 @@ func _find_upgrade_option(pool: UpgradePoolData, option_id: StringName) -> Upgra
 			return option
 	_failures.append("Failed to find upgrade option %s" % option_id)
 	return null
-
-
-func _has_common_rare_epic(rarities: Array[int]) -> bool:
-	return (
-		rarities.has(UpgradeOptionData.Rarity.COMMON)
-		and rarities.has(UpgradeOptionData.Rarity.RARE)
-		and rarities.has(UpgradeOptionData.Rarity.EPIC)
-	)
 
 
 func _has_module_skill_stat(modifiers: Dictionary) -> bool:

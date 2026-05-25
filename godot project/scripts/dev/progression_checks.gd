@@ -16,7 +16,7 @@ func check_default_character_resource(ctx) -> void:
 	else:
 		check_character_fields(ctx, template, "Character template")
 
-	var player := ctx.instantiate_scene("res://scenes/player/player.tscn") as PlayerController
+	var player = ctx.instantiate_scene("res://scenes/player/player.tscn")
 	if player == null:
 		return
 	ctx.root.add_child(player)
@@ -64,7 +64,7 @@ func check_character_fields(ctx, character: Resource, label: String) -> void:
 
 
 func check_upgrade_pool(ctx) -> void:
-	var pool := load("res://resources/upgrades/pools/default_upgrade_pool.tres") as UpgradePoolData
+	var pool = load("res://resources/upgrades/pools/default_upgrade_pool.tres")
 	if pool == null:
 		ctx.failures.append("Failed to load default upgrade pool")
 		return
@@ -92,7 +92,7 @@ func check_upgrade_pool(ctx) -> void:
 
 
 func check_module_skill_pool(ctx) -> void:
-	var pool := load("res://resources/upgrades/pools/default_module_skill_pool.tres") as UpgradePoolData
+	var pool = load("res://resources/upgrades/pools/default_module_skill_pool.tres")
 	if pool == null:
 		ctx.failures.append("Failed to load default module skill pool")
 		return
@@ -167,7 +167,7 @@ func check_module_skill_pool(ctx) -> void:
 
 
 func check_general_skill_pool(ctx, has_module_skill_stat_fn: Callable) -> void:
-	var pool := load("res://resources/upgrades/pools/default_general_skill_pool.tres") as UpgradePoolData
+	var pool = load("res://resources/upgrades/pools/default_general_skill_pool.tres")
 	if pool == null:
 		ctx.failures.append("Failed to load default general skill pool")
 		return
@@ -231,9 +231,9 @@ func check_upgrade_resource_grouping(ctx) -> void:
 	ctx.expect(FileAccess.file_exists(module_skill_pool_path), "Module skill pool should live under resources/upgrades/pools")
 	ctx.expect(FileAccess.file_exists(general_skill_pool_path), "General skill pool should live under resources/upgrades/pools")
 
-	var module_install_pool := load(module_install_pool_path) as UpgradePoolData
-	var module_skill_pool := load(module_skill_pool_path) as UpgradePoolData
-	var general_skill_pool := load(general_skill_pool_path) as UpgradePoolData
+	var module_install_pool = load(module_install_pool_path)
+	var module_skill_pool = load(module_skill_pool_path)
+	var general_skill_pool = load(general_skill_pool_path)
 
 	if module_install_pool != null:
 		for option in module_install_pool.options:
@@ -276,8 +276,8 @@ func check_upgrade_resource_grouping(ctx) -> void:
 
 
 func check_upgrade_filtering_rules(ctx, find_upgrade_option_fn: Callable) -> void:
-	var pool := load("res://resources/upgrades/pools/default_upgrade_pool.tres") as UpgradePoolData
-	var module_skill_pool := load("res://resources/upgrades/pools/default_module_skill_pool.tres") as UpgradePoolData
+	var pool = load("res://resources/upgrades/pools/default_upgrade_pool.tres")
+	var module_skill_pool = load("res://resources/upgrades/pools/default_module_skill_pool.tres")
 	if pool == null or module_skill_pool == null:
 		return
 
@@ -295,15 +295,15 @@ func check_upgrade_filtering_rules(ctx, find_upgrade_option_fn: Callable) -> voi
 	var pierce_boost: UpgradeOptionData = find_upgrade_option_fn.call(module_skill_pool, &"upgrade_pierce_boost")
 	if pierce_boost != null:
 		ctx.expect(not upgrade_manager._can_offer(pierce_boost), "Pierce boost should not appear before piercing module is current")
-		var piercing_module := load("res://resources/modules/payloads/payload_piercing.tres") as ModuleData
+		var piercing_module = load("res://resources/modules/payloads/payload_piercing.tres")
 		build_state.install_module(piercing_module, false, false)
 		ctx.expect(upgrade_manager._can_offer(pierce_boost), "Pierce boost should appear after piercing module is current")
 
-	var luck_boost: UpgradeOptionData = find_upgrade_option_fn.call(module_skill_pool, &"upgrade_luck_boost")
+	var luck_boost = find_upgrade_option_fn.call(module_skill_pool, &"upgrade_luck_boost")
 	if luck_boost != null:
 		ctx.expect(upgrade_manager._can_offer(luck_boost), "Luck boost should appear when a required starting module is current")
 
-	var module_option: UpgradeOptionData = find_upgrade_option_fn.call(pool, &"upgrade_burst_fire")
+	var module_option = find_upgrade_option_fn.call(pool, &"upgrade_burst_fire")
 	if module_option != null:
 		build_state.acquired_module_ids = [&"burst_fire"]
 		ctx.expect(not upgrade_manager._can_offer(module_option), "Already acquired modules should wait for the future replacement path")
@@ -345,7 +345,7 @@ func check_upgrade_pool_decoupling(ctx) -> void:
 	build_state.default_fire_mode = null
 	build_state.default_payload = null
 	ctx.root.add_child(build_state)
-	var normal_payload := load("res://resources/modules/payloads/payload_normal.tres") as ModuleData
+	var normal_payload = load("res://resources/modules/payloads/payload_normal.tres")
 	build_state.install_module(normal_payload, false, false)
 
 	var upgrade_manager := UpgradeManager.new()

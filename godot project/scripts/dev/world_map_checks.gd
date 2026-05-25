@@ -84,12 +84,12 @@ func check_world_resource_grouping(ctx) -> void:
 	var arena_visual_source := FileAccess.get_file_as_string("res://scripts/world/arena_visual.gd")
 	ctx.expect(arena_visual_source.find("res://resources/world/visuals/default_arena_visual.tres") >= 0, "ArenaVisual should load default visual data from resources/world/visuals")
 
-	var default_map := load("res://resources/maps/default_map.tres") as MapData
+	var default_map = load("res://resources/maps/default_map.tres")
 	if default_map != null and default_map.visual_data != null:
 		var visual_path := String(default_map.visual_data.resource_path)
 		ctx.expect(visual_path.contains("/resources/world/visuals/"), "Default map visual resource should live under resources/world/visuals")
 
-	var default_visual := load("res://resources/world/visuals/default_arena_visual.tres") as ArenaVisualData
+	var default_visual = load("res://resources/world/visuals/default_arena_visual.tres")
 	ctx.expect(default_visual != null, "Default arena visual resource should exist under resources/world/visuals")
 	if default_visual != null:
 		for obstacle in default_visual.obstacles:

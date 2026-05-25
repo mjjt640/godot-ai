@@ -395,30 +395,6 @@ func _instantiate_scene(scene_path: String) -> Node:
 	return instance
 
 
-func _create_test_world_obstacle(position: Vector2, size: Vector2) -> StaticBody2D:
-	var obstacle := StaticBody2D.new()
-	obstacle.name = "NavigationTestObstacle"
-	obstacle.collision_layer = CollisionLayers.WORLD
-	obstacle.collision_mask = 0
-	obstacle.global_position = position
-	var shape := CollisionShape2D.new()
-	var rectangle := RectangleShape2D.new()
-	rectangle.size = size
-	shape.shape = rectangle
-	obstacle.add_child(shape)
-	return obstacle
-
-
-func _collect_descendants(node: Node) -> Array[Node]:
-	var descendants: Array[Node] = []
-	if node == null:
-		return descendants
-	for child in node.get_children():
-		descendants.append(child)
-		descendants.append_array(_collect_descendants(child))
-	return descendants
-
-
 func _remove_instance(instance: Node) -> void:
 	root.remove_child(instance)
 	instance.free()

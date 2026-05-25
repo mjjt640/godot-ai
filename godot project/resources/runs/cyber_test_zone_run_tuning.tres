@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="RunTuningData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/runs/run_tuning_data.gd" id="1_run_tuning"]
+
+[resource]
+script = ExtResource("1_run_tuning")
+spawn_interval = 0.85
+spawn_radius = 760.0
+minimum_spawn_distance = 480.0
+spawn_batch_size = 2
+max_alive_enemies = 12
+arena_half_extents = Vector2(2600, 1600)
+arena_wall_thickness = 80.0
+enemy_spawn_margin = 128.0

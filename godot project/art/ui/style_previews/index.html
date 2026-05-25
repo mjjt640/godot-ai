@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>UI 风格样张</title>
+  <style>
+    :root {
+      color: #f3efe5;
+      background: #141414;
+      font-family: "Microsoft YaHei", sans-serif;
+    }
+    body {
+      margin: 0;
+      padding: 28px;
+    }
+    h1 {
+      margin: 0 0 20px;
+      font-size: 28px;
+      font-weight: 700;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 18px;
+    }
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+    figure {
+      margin: 0;
+      background: #202020;
+      border: 1px solid #343434;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    figcaption {
+      padding: 10px 12px;
+      font-size: 15px;
+      color: #d8d1c4;
+    }
+  </style>
+</head>
+<body>
+  <h1>UI 风格样张</h1>
+  <div class="grid">
+    <a href="style_clean_sci_fi.svg"><figure><img src="style_clean_sci_fi.svg" alt="清爽科幻"><figcaption>清爽科幻</figcaption></figure></a>
+    <a href="style_paper_tactical.svg"><figure><img src="style_paper_tactical.svg" alt="纸质战术"><figcaption>纸质战术</figcaption></figure></a>
+    <a href="style_neon_arcade.svg"><figure><img src="style_neon_arcade.svg" alt="霓虹街机"><figcaption>霓虹街机</figcaption></figure></a>
+    <a href="style_rune_dark_gold.svg"><figure><img src="style_rune_dark_gold.svg" alt="符文暗金"><figcaption>符文暗金</figcaption></figure></a>
+  </div>
+</body>
+</html>

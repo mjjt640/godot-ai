@@ -8,3 +8,27 @@
 script = ExtResource("1_visual")
 run_tuning = ExtResource("2_tuning")
 visual_data = ExtResource("3_visual_data")
+
+[node name="GroundBaseLayer" type="Node2D" parent="."]
+z_index = -80
+
+[node name="GroundDetailLayer" type="Node2D" parent="."]
+z_index = -70
+
+[node name="NeonDetailLayer" type="Node2D" parent="."]
+z_index = -60
+
+[node name="PropVisualLayer" type="Node2D" parent="."]
+z_index = -20
+
+[node name="HazardVisualLayer" type="Node2D" parent="."]
+z_index = -10
+
+[node name="BoundaryVisualLayer" type="Node2D" parent="."]
+z_index = 40
+
+[node name="WorldCollisionLayer" type="Node2D" parent="."]
+z_index = 50
+
+[node name="HazardAreaLayer" type="Node2D" parent="."]
+z_index = 60

@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#071114"/>
+      <stop offset="0.55" stop-color="#10262b"/>
+      <stop offset="1" stop-color="#1c1710"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#14333a"/>
+      <stop offset="1" stop-color="#091719"/>
+    </linearGradient>
+    <linearGradient id="hp" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#db3348"/>
+      <stop offset="1" stop-color="#ff8a56"/>
+    </linearGradient>
+    <linearGradient id="xp" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#34d3a0"/>
+      <stop offset="1" stop-color="#72e6ff"/>
+    </linearGradient>
+    <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <rect width="1280" height="720" fill="url(#bg)"/>
+  <g opacity="0.18">
+    <path d="M0 120H1280M0 240H1280M0 360H1280M0 480H1280M0 600H1280" stroke="#8bf6ff" stroke-width="1"/>
+    <path d="M120 0V720M280 0V720M440 0V720M600 0V720M760 0V720M920 0V720M1080 0V720" stroke="#8bf6ff" stroke-width="1"/>
+  </g>
+  <g transform="translate(60 52)">
+    <text x="0" y="0" fill="#d9fbff" font-size="42" font-family="Microsoft YaHei, sans-serif" font-weight="700">清爽科幻</text>
+    <text x="2" y="36" fill="#80aeb6" font-size="18" font-family="Microsoft YaHei, sans-serif">冷色金属、清晰边线、轻发光，适合高可读 HUD</text>
+  </g>
+  <g transform="translate(58 560)">
+    <path d="M0 20 Q0 0 20 0H545L588 40V108Q588 128 568 128H20Q0 128 0 108Z" fill="url(#panel)" stroke="#51e7ff" stroke-width="2"/>
+    <circle cx="66" cy="64" r="39" fill="#0c1c20" stroke="#65f2ff" stroke-width="3"/>
+    <path d="M66 38L88 62L66 90L44 62Z" fill="#72e6ff" filter="url(#softGlow)"/>
+    <text x="124" y="42" fill="#dffcff" font-size="18" font-family="Microsoft YaHei, sans-serif">生命</text>
+    <rect x="184" y="23" width="330" height="24" rx="4" fill="#051013" stroke="#3b7984"/>
+    <rect x="188" y="27" width="238" height="16" rx="3" fill="url(#hp)"/>
+    <text x="124" y="86" fill="#dffcff" font-size="18" font-family="Microsoft YaHei, sans-serif">经验</text>
+    <rect x="184" y="67" width="330" height="24" rx="4" fill="#051013" stroke="#3b7984"/>
+    <rect x="188" y="71" width="286" height="16" rx="3" fill="url(#xp)"/>
+    <text x="530" y="84" fill="#dffcff" font-size="30" font-family="Microsoft YaHei, sans-serif" text-anchor="middle">12</text>
+  </g>
+  <g transform="translate(770 150)">
+    <path d="M0 0H370L408 38V382H0Z" fill="#0b1619" stroke="#51e7ff" stroke-width="2"/>
+    <path d="M18 18H352L390 56V364H18Z" fill="#132a30" stroke="#254e58"/>
+    <text x="42" y="65" fill="#e2fbff" font-size="28" font-family="Microsoft YaHei, sans-serif" font-weight="700">升级选择</text>
+    <g transform="translate(42 104)">
+      <rect width="294" height="70" rx="6" fill="#091719" stroke="#34d3a0" stroke-width="2"/>
+      <circle cx="40" cy="35" r="22" fill="#34d3a0"/>
+      <text x="78" y="31" fill="#e4fffa" font-size="18" font-family="Microsoft YaHei, sans-serif">电弧模块</text>
+      <text x="78" y="55" fill="#7dcbd4" font-size="14" font-family="Microsoft YaHei, sans-serif">攻速提升</text>
+    </g>
+    <g transform="translate(42 194)">
+      <rect width="294" height="70" rx="6" fill="#091719" stroke="#ffbd5a" stroke-width="2"/>
+      <circle cx="40" cy="35" r="22" fill="#ffbd5a"/>
+      <text x="78" y="31" fill="#fff7df" font-size="18" font-family="Microsoft YaHei, sans-serif">热能弹体</text>
+      <text x="78" y="55" fill="#d2b77a" font-size="14" font-family="Microsoft YaHei, sans-serif">伤害提升</text>
+    </g>
+    <g transform="translate(42 284)">
+      <rect width="294" height="70" rx="6" fill="#091719" stroke="#72e6ff" stroke-width="2"/>
+      <circle cx="40" cy="35" r="22" fill="#72e6ff"/>
+      <text x="78" y="31" fill="#e4fcff" font-size="18" font-family="Microsoft YaHei, sans-serif">磁场吸附</text>
+      <text x="78" y="55" fill="#8ecfd8" font-size="14" font-family="Microsoft YaHei, sans-serif">经验范围</text>
+    </g>
+  </g>
+</svg>

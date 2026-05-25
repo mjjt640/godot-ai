@@ -24,6 +24,8 @@ func _run() -> void:
 		return
 
 	root.add_child(arena)
+	var hazard_area_layer := arena.get_node_or_null("HazardAreaLayer")
+	_expect(hazard_area_layer != null, "ArenaVisual should isolate hazard gameplay areas in HazardAreaLayer")
 	var hazards := _collect_hazards(arena)
 	_expect(not hazards.is_empty(), "ArenaVisual should create resource-driven hazards")
 	if not hazards.is_empty():
@@ -56,10 +58,21 @@ func _run() -> void:
 
 func _collect_hazards(node: Node) -> Array[Area2D]:
 	var hazards: Array[Area2D] = []
-	for child in node.get_children():
+	var hazard_area_layer := node.get_node_or_null("HazardAreaLayer")
+	if hazard_area_layer == null:
+		return hazards
+	for child in _collect_descendants(hazard_area_layer):
 		if child is Area2D and child.name.begins_with("Hazard"):
 			hazards.append(child)
 	return hazards
+
+
+func _collect_descendants(node: Node) -> Array[Node]:
+	var descendants: Array[Node] = []
+	for child in node.get_children():
+		descendants.append(child)
+		descendants.append_array(_collect_descendants(child))
+	return descendants
 
 
 func _instantiate_scene(scene_path: String) -> Node:

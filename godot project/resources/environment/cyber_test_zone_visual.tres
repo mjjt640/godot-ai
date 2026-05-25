@@ -1,0 +1,100 @@
+[gd_resource type="Resource" script_class="ArenaVisualData" load_steps=15 format=3]
+
+[ext_resource type="Script" path="res://resources/environment/arena_visual_data.gd" id="1_visual"]
+[ext_resource type="Script" path="res://resources/environment/obstacle_data.gd" id="2_obstacle"]
+[ext_resource type="Script" path="res://resources/environment/hazard_data.gd" id="3_hazard"]
+
+[sub_resource type="Resource" id="ObstacleData_nw_wall"]
+script = ExtResource("2_obstacle")
+position = Vector2(-1500, -760)
+size = Vector2(420, 90)
+color = Color(0.12, 0.16, 0.18, 1)
+
+[sub_resource type="Resource" id="ObstacleData_nw_machine"]
+script = ExtResource("2_obstacle")
+position = Vector2(-1080, -520)
+size = Vector2(260, 130)
+color = Color(0.16, 0.2, 0.22, 1)
+
+[sub_resource type="Resource" id="ObstacleData_ne_wall"]
+script = ExtResource("2_obstacle")
+position = Vector2(1460, -700)
+size = Vector2(440, 90)
+color = Color(0.12, 0.17, 0.2, 1)
+
+[sub_resource type="Resource" id="ObstacleData_ne_terminal"]
+script = ExtResource("2_obstacle")
+position = Vector2(1040, -360)
+size = Vector2(240, 120)
+color = Color(0.16, 0.2, 0.24, 1)
+
+[sub_resource type="Resource" id="ObstacleData_w_cable"]
+script = ExtResource("2_obstacle")
+position = Vector2(-1780, 160)
+size = Vector2(320, 100)
+color = Color(0.11, 0.15, 0.18, 1)
+
+[sub_resource type="Resource" id="ObstacleData_e_cable"]
+script = ExtResource("2_obstacle")
+position = Vector2(1760, 180)
+size = Vector2(320, 100)
+color = Color(0.11, 0.15, 0.18, 1)
+
+[sub_resource type="Resource" id="ObstacleData_sw_barrier"]
+script = ExtResource("2_obstacle")
+position = Vector2(-1260, 760)
+size = Vector2(360, 90)
+color = Color(0.14, 0.18, 0.2, 1)
+
+[sub_resource type="Resource" id="ObstacleData_sw_reactor"]
+script = ExtResource("2_obstacle")
+position = Vector2(-760, 980)
+size = Vector2(240, 140)
+color = Color(0.17, 0.2, 0.23, 1)
+
+[sub_resource type="Resource" id="ObstacleData_se_barrier"]
+script = ExtResource("2_obstacle")
+position = Vector2(1280, 820)
+size = Vector2(360, 90)
+color = Color(0.14, 0.18, 0.2, 1)
+
+[sub_resource type="Resource" id="ObstacleData_se_reactor"]
+script = ExtResource("2_obstacle")
+position = Vector2(780, 1040)
+size = Vector2(240, 140)
+color = Color(0.17, 0.2, 0.23, 1)
+
+[sub_resource type="Resource" id="HazardData_north_leak"]
+script = ExtResource("3_hazard")
+position = Vector2(0, -940)
+size = Vector2(360, 140)
+color = Color(1, 0.08, 0.62, 0.28)
+damage = 6.0
+trigger_interval = 1.2
+
+[sub_resource type="Resource" id="HazardData_south_leak"]
+script = ExtResource("3_hazard")
+position = Vector2(0, 980)
+size = Vector2(360, 140)
+color = Color(0, 0.9, 0.92, 0.22)
+damage = 5.0
+trigger_interval = 1.4
+
+[resource]
+script = ExtResource("1_visual")
+arena_color = Color(0.038, 0.045, 0.064, 1)
+grid_color = Color(0.055, 0.21, 0.24, 0.42)
+panel_line_color = Color(0.01, 0.013, 0.02, 0.84)
+crack_color = Color(0.004, 0.005, 0.009, 0.88)
+neon_cyan_color = Color(0, 0.88, 0.92, 0.58)
+neon_pink_color = Color(1, 0.07, 0.58, 0.48)
+boundary_color = Color(0, 0.82, 0.86, 0.74)
+boundary_glow_color = Color(1, 0.07, 0.58, 0.22)
+grid_size = 128.0
+panel_size = 384.0
+panel_line_width = 2.0
+neon_lane_interval = 640.0
+neon_line_width = 3.0
+boundary_line_width = 5.0
+obstacles = Array[Resource("res://resources/environment/obstacle_data.gd")]([SubResource("ObstacleData_nw_wall"), SubResource("ObstacleData_nw_machine"), SubResource("ObstacleData_ne_wall"), SubResource("ObstacleData_ne_terminal"), SubResource("ObstacleData_w_cable"), SubResource("ObstacleData_e_cable"), SubResource("ObstacleData_sw_barrier"), SubResource("ObstacleData_sw_reactor"), SubResource("ObstacleData_se_barrier"), SubResource("ObstacleData_se_reactor")])
+hazards = Array[Resource("res://resources/environment/hazard_data.gd")]([SubResource("HazardData_north_leak"), SubResource("HazardData_south_leak")])

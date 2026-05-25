@@ -2,143 +2,196 @@ class_name ArenaVisual
 extends Node2D
 
 const CollisionLayers = preload("res://scripts/config/collision_layers.gd")
+const ArenaVisualDrawLayerScript = preload("res://scripts/environment/arena_visual_draw_layer.gd")
+
+const DRAW_LAYER_GROUND_BASE := 0
+const DRAW_LAYER_GROUND_DETAIL := 1
+const DRAW_LAYER_NEON_DETAIL := 2
+const DRAW_LAYER_BOUNDARY_VISUAL := 3
+
+const LAYER_DEFINITIONS := [
+	{"name": "GroundBaseLayer", "z_index": -80},
+	{"name": "GroundDetailLayer", "z_index": -70},
+	{"name": "NeonDetailLayer", "z_index": -60},
+	{"name": "PropVisualLayer", "z_index": -20},
+	{"name": "HazardVisualLayer", "z_index": -10},
+	{"name": "BoundaryVisualLayer", "z_index": 40},
+	{"name": "WorldCollisionLayer", "z_index": 50},
+	{"name": "HazardAreaLayer", "z_index": 60},
+]
 
 @export var run_tuning: RunTuningData = preload("res://resources/runs/default_run_tuning.tres")
 @export var visual_data: Resource = preload("res://resources/environment/default_arena_visual.tres")
 
-var _obstacle_nodes: Array[Node2D] = []
-var _hazard_nodes: Array[Area2D] = []
+var _layers: Dictionary = {}
+var _draw_layers: Array[Node2D] = []
 
 
 func _ready() -> void:
+	_ensure_layers()
+	_configure_draw_layers()
 	_rebuild_obstacles()
 	_rebuild_hazards()
 
 
-func configure(tuning: RunTuningData) -> void:
+func configure(tuning: RunTuningData, data: Resource = null) -> void:
 	run_tuning = tuning
-	queue_redraw()
+	if data != null:
+		visual_data = data
+	_ensure_layers()
+	_configure_draw_layers()
 	_rebuild_obstacles()
 	_rebuild_hazards()
 
 
-func _draw() -> void:
-	if run_tuning == null or visual_data == null:
-		return
+func _ensure_layers() -> void:
+	_layers.clear()
+	for layer_definition in LAYER_DEFINITIONS:
+		var layer_name := String(layer_definition["name"])
+		var layer := get_node_or_null(layer_name) as Node2D
+		if layer == null:
+			layer = _create_layer(layer_name)
+			add_child(layer)
+		layer.z_index = int(layer_definition["z_index"])
+		layer.y_sort_enabled = false
+		_layers[layer_name] = layer
 
-	var half_extents := run_tuning.arena_half_extents
-	var rect := Rect2(-half_extents, half_extents * 2.0)
-	draw_rect(rect, visual_data.get("arena_color"), true)
-	_draw_grid(rect)
-	draw_rect(rect, visual_data.get("boundary_color"), false, float(visual_data.get("boundary_line_width")))
+	_ensure_draw_layer("GroundBaseLayer", DRAW_LAYER_GROUND_BASE)
+	_ensure_draw_layer("GroundDetailLayer", DRAW_LAYER_GROUND_DETAIL)
+	_ensure_draw_layer("NeonDetailLayer", DRAW_LAYER_NEON_DETAIL)
+	_ensure_draw_layer("BoundaryVisualLayer", DRAW_LAYER_BOUNDARY_VISUAL)
 
 
-func _draw_grid(rect: Rect2) -> void:
-	var grid_size: float = float(visual_data.get("grid_size"))
-	if grid_size <= 0.0:
-		return
+func _create_layer(layer_name: String) -> Node2D:
+	var layer := Node2D.new()
+	layer.name = layer_name
+	return layer
 
-	var x := rect.position.x
-	while x <= rect.end.x:
-		draw_line(Vector2(x, rect.position.y), Vector2(x, rect.end.y), visual_data.get("grid_color"), 1.0)
-		x += grid_size
 
-	var y := rect.position.y
-	while y <= rect.end.y:
-		draw_line(Vector2(rect.position.x, y), Vector2(rect.end.x, y), visual_data.get("grid_color"), 1.0)
-		y += grid_size
+func _ensure_draw_layer(layer_name: String, layer_kind: int) -> void:
+	var layer := _layers[layer_name] as Node2D
+	var draw_layer := layer.get_node_or_null("DrawLayer") as Node2D
+	if draw_layer == null:
+		draw_layer = ArenaVisualDrawLayerScript.new()
+		draw_layer.name = "DrawLayer"
+		layer.add_child(draw_layer)
+	draw_layer.set("layer_kind", layer_kind)
+	if not _draw_layers.has(draw_layer):
+		_draw_layers.append(draw_layer)
+
+
+func _configure_draw_layers() -> void:
+	for draw_layer in _draw_layers:
+		if is_instance_valid(draw_layer):
+			draw_layer.call("configure", run_tuning, visual_data)
 
 
 func _rebuild_obstacles() -> void:
-	for obstacle_node in _obstacle_nodes:
-		if is_instance_valid(obstacle_node):
-			remove_child(obstacle_node)
-			obstacle_node.queue_free()
-	_obstacle_nodes.clear()
+	_clear_layer("PropVisualLayer")
+	_clear_layer("WorldCollisionLayer")
 
 	if visual_data == null:
 		return
 
 	var obstacles: Array = visual_data.get("obstacles")
+	var obstacle_index := 0
 	for obstacle_data in obstacles:
 		if obstacle_data == null:
 			continue
-		_add_obstacle(obstacle_data)
+		_add_obstacle(obstacle_data, obstacle_index)
+		obstacle_index += 1
 
 
 func _rebuild_hazards() -> void:
-	for hazard_node in _hazard_nodes:
-		if is_instance_valid(hazard_node):
-			remove_child(hazard_node)
-			hazard_node.queue_free()
-	_hazard_nodes.clear()
+	_clear_layer("HazardVisualLayer")
+	_clear_layer("HazardAreaLayer")
 
 	if visual_data == null:
 		return
 
 	var hazards: Array = visual_data.get("hazards")
+	var hazard_index := 0
 	for hazard_data in hazards:
 		if hazard_data == null:
 			continue
-		_add_hazard(hazard_data)
+		_add_hazard(hazard_data, hazard_index)
+		hazard_index += 1
 
 
-func _add_obstacle(obstacle_data: Resource) -> void:
+func _add_obstacle(obstacle_data: Resource, obstacle_index: int) -> void:
+	var collision_layer := _layers["WorldCollisionLayer"] as Node2D
+	var visual_layer := _layers["PropVisualLayer"] as Node2D
+	if collision_layer == null or visual_layer == null:
+		return
+
+	var obstacle_position: Vector2 = obstacle_data.get("position")
+	var obstacle_size: Vector2 = obstacle_data.get("size")
+	var obstacle_color: Color = obstacle_data.get("color")
+
 	var obstacle := StaticBody2D.new()
-	obstacle.name = "Obstacle"
+	obstacle.name = "Obstacle_%02d" % [obstacle_index + 1]
 	obstacle.collision_layer = CollisionLayers.WORLD
 	obstacle.collision_mask = 0
-	obstacle.position = obstacle_data.get("position")
+	obstacle.position = obstacle_position
 
 	var shape := CollisionShape2D.new()
 	var rectangle := RectangleShape2D.new()
-	var obstacle_size: Vector2 = obstacle_data.get("size")
 	rectangle.size = obstacle_size
 	shape.shape = rectangle
 	obstacle.add_child(shape)
+	collision_layer.add_child(obstacle)
 
 	var visual := Polygon2D.new()
+	visual.name = "ObstacleVisual_%02d" % [obstacle_index + 1]
+	visual.position = obstacle_position
 	var half_size: Vector2 = obstacle_size * 0.5
-	visual.color = obstacle_data.get("color")
+	visual.color = obstacle_color
 	visual.polygon = PackedVector2Array([
 		Vector2(-half_size.x, -half_size.y),
 		Vector2(half_size.x, -half_size.y),
 		Vector2(half_size.x, half_size.y),
 		Vector2(-half_size.x, half_size.y),
 	])
-	obstacle.add_child(visual)
-
-	add_child(obstacle)
-	_obstacle_nodes.append(obstacle)
+	visual_layer.add_child(visual)
 
 
-func _add_hazard(hazard_data: Resource) -> void:
+func _add_hazard(hazard_data: Resource, hazard_index: int) -> void:
+	var area_layer := _layers["HazardAreaLayer"] as Node2D
+	var visual_layer := _layers["HazardVisualLayer"] as Node2D
+	if area_layer == null or visual_layer == null:
+		return
+
+	var hazard_position: Vector2 = hazard_data.get("position")
+	var hazard_size: Vector2 = hazard_data.get("size")
+	var hazard_color: Color = hazard_data.get("color")
+
 	var hazard := Area2D.new()
-	hazard.name = "Hazard"
+	hazard.name = "Hazard_%02d" % [hazard_index + 1]
 	hazard.collision_layer = 0
 	hazard.collision_mask = CollisionLayers.PLAYER
 	hazard.monitoring = true
 	hazard.monitorable = false
-	hazard.position = hazard_data.get("position")
+	hazard.position = hazard_position
 
 	var shape := CollisionShape2D.new()
 	shape.name = "CollisionShape2D"
 	var rectangle := RectangleShape2D.new()
-	var hazard_size: Vector2 = hazard_data.get("size")
 	rectangle.size = hazard_size
 	shape.shape = rectangle
 	hazard.add_child(shape)
 
 	var visual := Polygon2D.new()
+	visual.name = "HazardVisual_%02d" % [hazard_index + 1]
+	visual.position = hazard_position
 	var half_size: Vector2 = hazard_size * 0.5
-	visual.color = hazard_data.get("color")
+	visual.color = hazard_color
 	visual.polygon = PackedVector2Array([
 		Vector2(-half_size.x, -half_size.y),
 		Vector2(half_size.x, -half_size.y),
 		Vector2(half_size.x, half_size.y),
 		Vector2(-half_size.x, half_size.y),
 	])
-	hazard.add_child(visual)
+	visual_layer.add_child(visual)
 
 	var timer := Timer.new()
 	timer.name = "DamageTimer"
@@ -169,5 +222,15 @@ func _add_hazard(hazard_data: Resource) -> void:
 			timer.stop()
 	)
 
-	add_child(hazard)
-	_hazard_nodes.append(hazard)
+	area_layer.add_child(hazard)
+
+
+func _clear_layer(layer_name: String) -> void:
+	var layer := _layers.get(layer_name) as Node
+	if layer == null:
+		return
+	for child in layer.get_children():
+		if child.get_script() == ArenaVisualDrawLayerScript:
+			continue
+		layer.remove_child(child)
+		child.queue_free()

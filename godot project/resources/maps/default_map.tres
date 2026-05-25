@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="MapData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://resources/maps/map_data.gd" id="1_map"]
+[ext_resource type="Resource" path="res://resources/runs/cyber_test_zone_run_tuning.tres" id="2_tuning"]
+[ext_resource type="Resource" path="res://resources/environment/cyber_test_zone_visual.tres" id="3_visual"]
+[ext_resource type="Resource" path="res://resources/maps/cyber_test_zone_tile_library.tres" id="4_tiles"]
+
+[resource]
+script = ExtResource("1_map")
+id = &"cyber_test_zone"
+display_name = "赛博实验区"
+run_tuning = ExtResource("2_tuning")
+visual_data = ExtResource("3_visual")
+tile_library = ExtResource("4_tiles")

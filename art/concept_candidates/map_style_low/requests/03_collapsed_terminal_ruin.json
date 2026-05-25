@@ -1,0 +1,34 @@
+{
+  "model": "gpt-5.5",
+  "input": [
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "input_text",
+          "text": "Generate one 1024x1024 PNG concept image for a cohesive six-image style set. Subject: collapsed terminal ruin map for a top-down 2D survivor game. True overhead top-down view, not isometric. Broken screen walls, console islands, slanted combat corridor, stronger black comic-style shadows, shattered industrial floor geometry. Unified visual style: hand-painted graffiti feeling, rough heavy black linework, marker-pen strokes, dark cyberpunk wasteland, restrained dirty low-pollution background, readable tactical map shapes. Rainbow color only as very thin edge accents, cyan suggests player paths, electric magenta suggests enemy danger traces. Make it a loose style candidate, not a polished final asset. No UI, no text, no letters, no numbers, no watermark, no logo, no characters, no sprites, no 3D, no photorealism, no pixel art."
+        }
+      ]
+    }
+  ],
+  "tools": [
+    {
+      "type": "image_generation",
+      "model": "gpt-image-2",
+      "action": "generate",
+      "size": "1024x1024",
+      "quality": "low",
+      "output_format": "png",
+      "moderation": "low",
+      "partial_images": 0
+    }
+  ],
+  "tool_choice": {
+    "type": "image_generation"
+  },
+  "reasoning": {
+    "effort": "xhigh"
+  },
+  "store": false,
+  "stream": true
+}

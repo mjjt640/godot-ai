@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#101112"/>
+      <stop offset="0.52" stop-color="#232019"/>
+      <stop offset="1" stop-color="#061612"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f6dc8b"/>
+      <stop offset="0.48" stop-color="#a97826"/>
+      <stop offset="1" stop-color="#4f3510"/>
+    </linearGradient>
+    <linearGradient id="hp" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#842a2b"/>
+      <stop offset="1" stop-color="#e35e44"/>
+    </linearGradient>
+    <linearGradient id="xp" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#1e7569"/>
+      <stop offset="1" stop-color="#a6d77a"/>
+    </linearGradient>
+    <filter id="warmGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <rect width="1280" height="720" fill="url(#bg)"/>
+  <g opacity="0.17" stroke="#d0a04c" stroke-width="3" fill="none">
+    <circle cx="240" cy="220" r="120"/>
+    <circle cx="1030" cy="520" r="160"/>
+    <path d="M240 100L285 220L240 340L195 220Z"/>
+    <path d="M930 520H1130M1030 420V620M960 450L1100 590M1100 450L960 590"/>
+  </g>
+  <g transform="translate(60 52)">
+    <text x="0" y="0" fill="#f6dc8b" font-size="42" font-family="Microsoft YaHei, serif" font-weight="700">符文暗金</text>
+    <text x="2" y="36" fill="#b99a61" font-size="18" font-family="Microsoft YaHei, serif">厚重金属、暗色仪式感、品质感强，适合偏魔法科技的模块系统</text>
+  </g>
+  <g transform="translate(58 560)">
+    <path d="M0 24L24 0H568L596 28V108L572 132H24L0 108Z" fill="#121411" stroke="url(#gold)" stroke-width="4"/>
+    <path d="M18 34L34 17H552L578 42V98L562 115H34L18 98Z" fill="#1f211a" stroke="#604618" stroke-width="2"/>
+    <circle cx="69" cy="66" r="42" fill="#101112" stroke="url(#gold)" stroke-width="5"/>
+    <path d="M69 33L84 55H109L89 72L96 98L69 84L42 98L49 72L29 55H54Z" fill="#f6dc8b" filter="url(#warmGlow)"/>
+    <text x="126" y="42" fill="#f6dc8b" font-size="18" font-family="Microsoft YaHei, serif" font-weight="700">生命</text>
+    <rect x="186" y="22" width="326" height="25" rx="2" fill="#090a08" stroke="#6f501b" stroke-width="2"/>
+    <rect x="190" y="26" width="230" height="17" rx="1" fill="url(#hp)"/>
+    <text x="126" y="88" fill="#f6dc8b" font-size="18" font-family="Microsoft YaHei, serif" font-weight="700">经验</text>
+    <rect x="186" y="68" width="326" height="25" rx="2" fill="#090a08" stroke="#6f501b" stroke-width="2"/>
+    <rect x="190" y="72" width="284" height="17" rx="1" fill="url(#xp)"/>
+    <text x="540" y="88" fill="#f6dc8b" font-size="32" font-family="Georgia, serif" font-weight="700" text-anchor="middle">12</text>
+  </g>
+  <g transform="translate(770 148)">
+    <path d="M0 22L22 0H380L408 28V364L386 386H22L0 364Z" fill="#11130f" stroke="url(#gold)" stroke-width="4"/>
+    <path d="M20 42L42 20H360L388 48V344L370 366H42L20 344Z" fill="#202119" stroke="#634919" stroke-width="2"/>
+    <text x="48" y="70" fill="#f6dc8b" font-size="28" font-family="Microsoft YaHei, serif" font-weight="700">升级选择</text>
+    <g transform="translate(44 106)">
+      <path d="M0 0H298L314 16V72H16L0 56Z" fill="#11130f" stroke="#71c69a" stroke-width="3"/>
+      <circle cx="42" cy="36" r="23" fill="#1e7569" stroke="#f6dc8b" stroke-width="2"/>
+      <text x="82" y="31" fill="#f6dc8b" font-size="18" font-family="Microsoft YaHei, serif" font-weight="700">电弧模块</text>
+      <text x="82" y="56" fill="#9a8660" font-size="14" font-family="Microsoft YaHei, serif">攻速提升</text>
+    </g>
+    <g transform="translate(44 197)">
+      <path d="M0 0H298L314 16V72H16L0 56Z" fill="#11130f" stroke="#f6dc8b" stroke-width="3"/>
+      <circle cx="42" cy="36" r="23" fill="#a97826" stroke="#f6dc8b" stroke-width="2"/>
+      <text x="82" y="31" fill="#f6dc8b" font-size="18" font-family="Microsoft YaHei, serif" font-weight="700">热能弹体</text>
+      <text x="82" y="56" fill="#9a8660" font-size="14" font-family="Microsoft YaHei, serif">伤害提升</text>
+    </g>
+    <g transform="translate(44 288)">
+      <path d="M0 0H298L314 16V72H16L0 56Z" fill="#11130f" stroke="#e35e44" stroke-width="3"/>
+      <circle cx="42" cy="36" r="23" fill="#842a2b" stroke="#f6dc8b" stroke-width="2"/>
+      <text x="82" y="31" fill="#f6dc8b" font-size="18" font-family="Microsoft YaHei, serif" font-weight="700">磁场吸附</text>
+      <text x="82" y="56" fill="#9a8660" font-size="14" font-family="Microsoft YaHei, serif">经验范围</text>
+    </g>
+  </g>
+</svg>

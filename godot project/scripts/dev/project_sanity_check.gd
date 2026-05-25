@@ -38,6 +38,8 @@ func _run() -> void:
 	_check_arena_bounds_scene()
 	_check_arena_visual_scene()
 	_check_arena_hazards()
+	_check_default_map_data()
+	_check_default_map_tile_library()
 	_check_game_root_scene()
 	_check_combat_feedback_resource()
 	_check_combat_feedback_readability_hooks()
@@ -69,6 +71,7 @@ func _run() -> void:
 	_check_upgrade_filtering_rules()
 	_check_upgrade_pool_decoupling()
 	_check_run_tuning()
+	_check_map_documentation()
 	_check_run_objective()
 	_check_wave_table()
 	_check_enemy_templates_and_pool_variety()
@@ -116,8 +119,28 @@ func _check_arena_visual_scene() -> void:
 		return
 
 	root.add_child(instance)
+	var expected_layers := [
+		"GroundBaseLayer",
+		"GroundDetailLayer",
+		"NeonDetailLayer",
+		"PropVisualLayer",
+		"HazardVisualLayer",
+		"BoundaryVisualLayer",
+		"WorldCollisionLayer",
+		"HazardAreaLayer",
+	]
+	var previous_z_index := -1000000
+	for layer_name in expected_layers:
+		var layer := instance.get_node_or_null(layer_name) as Node2D
+		_expect(layer != null, "ArenaVisual should include %s" % layer_name)
+		if layer != null:
+			_expect(layer.z_index > previous_z_index, "ArenaVisual layer %s should keep stable ascending z_index order" % layer_name)
+			previous_z_index = layer.z_index
+
+	var world_collision_layer := instance.get_node_or_null("WorldCollisionLayer")
+	_expect(world_collision_layer != null, "ArenaVisual should isolate obstacle collision in WorldCollisionLayer")
 	var obstacle_count := 0
-	for child in instance.get_children():
+	for child in _collect_descendants(world_collision_layer):
 		if child is StaticBody2D:
 			obstacle_count += 1
 			var obstacle := child as StaticBody2D
@@ -133,8 +156,10 @@ func _check_arena_hazards() -> void:
 		return
 
 	root.add_child(instance)
+	var hazard_area_layer := instance.get_node_or_null("HazardAreaLayer")
+	_expect(hazard_area_layer != null, "ArenaVisual should isolate hazard gameplay areas in HazardAreaLayer")
 	var hazards: Array[Area2D] = []
-	for child in instance.get_children():
+	for child in _collect_descendants(hazard_area_layer):
 		if child is Area2D and child.name.begins_with("Hazard"):
 			hazards.append(child)
 	_expect(not hazards.is_empty(), "ArenaVisual should create resource-driven hazards")
@@ -144,6 +169,65 @@ func _check_arena_hazards() -> void:
 		_expect(hazard.collision_mask == CollisionLayers.PLAYER, "ArenaVisual hazard should only scan player layer")
 		_expect(hazard.get_node_or_null("DamageTimer") != null, "ArenaVisual hazard should create periodic damage timer")
 	_remove_instance(instance)
+
+
+func _check_default_map_data() -> void:
+	var map_data := load("res://resources/maps/default_map.tres")
+	_expect(map_data != null, "Default map data should exist")
+	if map_data == null:
+		return
+
+	_expect(map_data.get("id") == &"cyber_test_zone", "Default map should point to the first playable cyber test zone")
+	_expect(map_data.get("run_tuning") != null, "Default map data should reference run tuning")
+	_expect(map_data.get("visual_data") != null, "Default map data should reference arena visual data")
+	var run_tuning := map_data.get("run_tuning") as RunTuningData
+	if run_tuning != null:
+		_expect(run_tuning.arena_half_extents.x >= 2400.0, "First playable map should be wide enough for survivor-style roaming")
+		_expect(run_tuning.arena_half_extents.y >= 1500.0, "First playable map should be tall enough for survivor-style roaming")
+		_expect(run_tuning.minimum_spawn_distance < run_tuning.spawn_radius, "First playable map should leave spawn ring space")
+	var visual_data: Resource = map_data.get("visual_data") as Resource
+	if visual_data != null:
+		var obstacles: Array = visual_data.get("obstacles") as Array
+		var hazards: Array = visual_data.get("hazards") as Array
+		_expect(obstacles.size() >= 8, "First playable map should reuse simple obstacle chunks across a large arena")
+		_expect(obstacles.size() <= 16, "First playable map should stay simple and avoid maze-like obstacle density")
+		_expect(hazards.size() <= 2, "First playable map should keep hazards sparse while testing roaming")
+	_expect(map_data.get("tile_library") != null, "Default map data should reference a tile library")
+
+	var run_manager_source := FileAccess.get_file_as_string("res://scripts/run/run_manager.gd")
+	_expect(run_manager_source.find("@export var map_data") >= 0, "RunManager should expose a single map_data selection resource")
+	_expect(run_manager_source.find("map_data.get(\"run_tuning\")") >= 0, "RunManager should read run tuning from map_data")
+	_expect(run_manager_source.find("map_data.get(\"visual_data\")") >= 0, "RunManager should read arena visuals from map_data")
+
+
+func _check_default_map_tile_library() -> void:
+	var map_data := load("res://resources/maps/default_map.tres")
+	if map_data == null:
+		return
+
+	var tile_library: Resource = map_data.get("tile_library") as Resource
+	_expect(tile_library != null, "Default map tile library should exist")
+	if tile_library == null:
+		return
+
+	_expect(tile_library.get("tile_size") == Vector2i(256, 256), "Cyber test zone tiles should keep 256x256 source cells")
+	_expect((tile_library.get("ground_base_tiles") as Array).size() >= 6, "Cyber test zone should have enough base ground tiles")
+	_expect((tile_library.get("ground_detail_tiles") as Array).size() >= 6, "Cyber test zone should have enough detail ground tiles")
+	_expect((tile_library.get("neon_detail_tiles") as Array).size() >= 4, "Cyber test zone should have neon detail tiles")
+	_expect((tile_library.get("decals") as Array).size() >= 16, "Cyber test zone should have transparent decal assets")
+	_expect((tile_library.get("hazard_visuals") as Array).size() >= 16, "Cyber test zone should have hazard visual assets")
+	_expect((tile_library.get("hazard_ground_tiles") as Array).size() >= 16, "Cyber test zone should have hazard ground tile assets")
+
+	for property_name in [
+		"ground_base_tiles",
+		"ground_detail_tiles",
+		"neon_detail_tiles",
+		"decals",
+		"hazard_visuals",
+		"hazard_ground_tiles",
+	]:
+		for texture in tile_library.get(property_name):
+			_expect(texture is Texture2D, "Map tile library %s should only contain Texture2D entries" % property_name)
 
 
 func _check_game_root_scene() -> void:
@@ -230,10 +314,10 @@ func _check_combat_feedback_readability_hooks() -> void:
 	_expect(pressure_impact_burst_width != null and float(pressure_impact_burst_width) > 0.0, "Combat feedback needs pressure impact burst width")
 	_expect(feedback.get("pressure_impact_burst_color") is Color, "Combat feedback needs pressure impact burst color")
 
-	var enemy_source := FileAccess.get_file_as_string("res://scripts/game/enemy_controller.gd")
+	var enemy_source := FileAccess.get_file_as_string("res://scripts/enemies/enemy_controller.gd")
 	_expect(enemy_source.find("damage_number_boss_color") >= 0, "EnemyController should use boss damage number feedback")
 	_expect(enemy_source.find("damage_number_elite_color") >= 0, "EnemyController should use elite damage number feedback")
-	var pressure_executor_source := FileAccess.get_file_as_string("res://scripts/game/pressure_enemy_behavior_executor.gd")
+	var pressure_executor_source := FileAccess.get_file_as_string("res://scripts/enemies/pressure_enemy_behavior_executor.gd")
 	_expect(pressure_executor_source.find("PressureWarningEffect") >= 0, "PressureEnemyBehaviorExecutor should spawn pressure warning effects")
 	_expect(pressure_executor_source.find("PressureImpactEffect") >= 0, "PressureEnemyBehaviorExecutor should spawn pressure impact effects")
 
@@ -376,6 +460,7 @@ func _check_projectile_world_collision_rules() -> void:
 	_expect((piercing_projectile.collision_mask & CollisionLayers.WORLD) == 0, "World-piercing projectile should not scan WORLD collisions")
 	_remove_instance(piercing_projectile)
 
+
 func _check_enemy_soft_separation() -> void:
 	var player := _instantiate_scene("res://scenes/player/player.tscn") as PlayerController
 	var first_enemy := _instantiate_scene("res://scenes/enemies/enemy_basic.tscn") as EnemyController
@@ -429,18 +514,19 @@ func _check_enemy_obstacle_navigation() -> void:
 
 
 func _check_enemy_obstacle_escape_navigation_hooks() -> void:
-	var enemy_source := FileAccess.get_file_as_string("res://scripts/game/enemy_controller.gd")
+	var enemy_source := FileAccess.get_file_as_string("res://scripts/enemies/enemy_controller.gd")
 	_expect(enemy_source.find("_recover_from_slide_collisions") >= 0, "EnemyController should recover when slide collisions show it is stuck on a world obstacle")
 	_expect(enemy_source.find("_get_detour_angle_multiplier") >= 0, "EnemyController should expand detour angle when regular obstacle steering is stuck")
 	_expect(enemy_source.find("_choose_clearer_direction") >= 0, "EnemyController should choose from more than two obstacle detour directions")
 
+
 func _check_enemy_skill_executor_split() -> void:
-	var base_executor_path := "res://scripts/game/enemy_skill_executor.gd"
-	var dash_executor_path := "res://scripts/game/dash_skill_executor.gd"
+	var base_executor_path := "res://scripts/enemies/enemy_skill_executor.gd"
+	var dash_executor_path := "res://scripts/enemies/dash_skill_executor.gd"
 	_expect(FileAccess.file_exists(base_executor_path), "EnemySkillExecutor base script should own the common skill executor contract")
 	_expect(FileAccess.file_exists(dash_executor_path), "DashSkillExecutor should own dash-specific enemy skill behavior")
 
-	var enemy_source := FileAccess.get_file_as_string("res://scripts/game/enemy_controller.gd")
+	var enemy_source := FileAccess.get_file_as_string("res://scripts/enemies/enemy_controller.gd")
 	_expect(enemy_source.find("_skill_executors") >= 0, "EnemyController should route enemy skills through an executor list")
 	_expect(enemy_source.find("DashEnemySkillDataScript") == -1, "EnemyController should not preload dash-specific skill data")
 	_expect(enemy_source.find("BossDashWarningEffect") == -1, "EnemyController should not spawn dash warning effects directly")
@@ -456,21 +542,21 @@ func _check_enemy_skill_executor_split() -> void:
 
 	if FileAccess.file_exists(dash_executor_path):
 		var dash_executor_source := FileAccess.get_file_as_string(dash_executor_path)
-		_expect(dash_executor_source.find("extends \"res://scripts/game/enemy_skill_executor.gd\"") >= 0, "DashSkillExecutor should inherit the common executor contract")
+		_expect(dash_executor_source.find("extends \"res://scripts/enemies/enemy_skill_executor.gd\"") >= 0, "DashSkillExecutor should inherit the common executor contract")
 		_expect(dash_executor_source.find("DashEnemySkillData") >= 0, "DashSkillExecutor should own dash skill data matching")
 		_expect(dash_executor_source.find("BossDashWarningEffect") >= 0, "DashSkillExecutor should own dash warning effects")
 		_expect(dash_executor_source.find("take_damage") >= 0, "DashSkillExecutor should own dash hit damage")
 
 
 func _check_enemy_behavior_executor_split() -> void:
-	var base_executor_path := "res://scripts/game/enemy_behavior_executor.gd"
-	var pressure_executor_path := "res://scripts/game/pressure_enemy_behavior_executor.gd"
-	var touch_executor_path := "res://scripts/game/touch_damage_behavior_executor.gd"
+	var base_executor_path := "res://scripts/enemies/enemy_behavior_executor.gd"
+	var pressure_executor_path := "res://scripts/enemies/pressure_enemy_behavior_executor.gd"
+	var touch_executor_path := "res://scripts/enemies/touch_damage_behavior_executor.gd"
 	_expect(FileAccess.file_exists(base_executor_path), "EnemyBehaviorExecutor base script should own the common behavior executor contract")
 	_expect(FileAccess.file_exists(pressure_executor_path), "PressureEnemyBehaviorExecutor should own PRESSURE enemy behavior")
 	_expect(FileAccess.file_exists(touch_executor_path), "TouchDamageBehaviorExecutor should own enemy contact damage")
 
-	var enemy_source := FileAccess.get_file_as_string("res://scripts/game/enemy_controller.gd")
+	var enemy_source := FileAccess.get_file_as_string("res://scripts/enemies/enemy_controller.gd")
 	_expect(enemy_source.find("_behavior_executors") >= 0, "EnemyController should route enemy behaviors through an executor list")
 	_expect(enemy_source.find("TouchDamageBehaviorExecutor") >= 0, "EnemyController should register touch damage behavior through an executor")
 	_expect(enemy_source.find("PressureWarningEffect") == -1, "EnemyController should not spawn pressure warning effects directly")
@@ -493,14 +579,14 @@ func _check_enemy_behavior_executor_split() -> void:
 
 	if FileAccess.file_exists(pressure_executor_path):
 		var pressure_executor_source := FileAccess.get_file_as_string(pressure_executor_path)
-		_expect(pressure_executor_source.find("extends \"res://scripts/game/enemy_behavior_executor.gd\"") >= 0, "PressureEnemyBehaviorExecutor should inherit the common behavior contract")
+		_expect(pressure_executor_source.find("extends \"res://scripts/enemies/enemy_behavior_executor.gd\"") >= 0, "PressureEnemyBehaviorExecutor should inherit the common behavior contract")
 		_expect(pressure_executor_source.find("PressureWarningEffect") >= 0, "PressureEnemyBehaviorExecutor should own pressure warning effects")
 		_expect(pressure_executor_source.find("PressureImpactEffect") >= 0, "PressureEnemyBehaviorExecutor should own pressure impact effects")
 		_expect(pressure_executor_source.find("take_damage") >= 0, "PressureEnemyBehaviorExecutor should own pressure delayed damage")
 
 	if FileAccess.file_exists(touch_executor_path):
 		var touch_executor_source := FileAccess.get_file_as_string(touch_executor_path)
-		_expect(touch_executor_source.find("extends \"res://scripts/game/enemy_behavior_executor.gd\"") >= 0, "TouchDamageBehaviorExecutor should inherit the common behavior contract")
+		_expect(touch_executor_source.find("extends \"res://scripts/enemies/enemy_behavior_executor.gd\"") >= 0, "TouchDamageBehaviorExecutor should inherit the common behavior contract")
 		_expect(touch_executor_source.find("_cooldown_remaining") >= 0, "TouchDamageBehaviorExecutor should own touch cooldown state")
 		_expect(touch_executor_source.find("get_touch_damage") >= 0, "TouchDamageBehaviorExecutor should own touch damage values")
 		_expect(touch_executor_source.find("get_touch_knockback") >= 0, "TouchDamageBehaviorExecutor should own enemy touch hit reaction")
@@ -811,6 +897,7 @@ func _check_base_weapon_parameters_apply_to_profile() -> void:
 	if core_bolt != null:
 		_expect(core_bolt.attack_range > 0.0, "Core bolt should configure a finite lock-on range")
 		_expect(not core_bolt.can_pierce_world, "Core bolt should not pierce world obstacles by default")
+
 
 func _check_stat_upgrade_applies_to_profile() -> void:
 	var build_state := BuildState.new()
@@ -1396,6 +1483,16 @@ func _check_run_tuning() -> void:
 	_expect(run_tuning.max_alive_enemies >= run_tuning.spawn_batch_size, "Run tuning max_alive_enemies should cover batch size")
 
 
+func _check_map_documentation() -> void:
+	var source := FileAccess.get_file_as_string("res://docs/map_architecture.md")
+	_expect(not source.is_empty(), "Map architecture documentation should exist")
+	_expect(source.find("MapData") >= 0, "Map architecture documentation should describe MapData")
+	_expect(source.find("ArenaVisual") >= 0, "Map architecture documentation should describe ArenaVisual")
+	_expect(source.find("ArenaBounds") >= 0, "Map architecture documentation should describe ArenaBounds")
+	_expect(source.find("WorldCollisionLayer") >= 0, "Map architecture documentation should describe collision layer ownership")
+	_expect(source.find("HazardAreaLayer") >= 0, "Map architecture documentation should describe hazard layer ownership")
+
+
 func _check_run_objective() -> void:
 	var objective := load("res://resources/runs/default_run_objective.tres")
 	if objective == null:
@@ -1425,13 +1522,13 @@ func _check_run_objective() -> void:
 	_check_special_enemy_scene("res://scenes/enemies/enemy_elite_brute.tscn", false)
 	_check_special_enemy_scene("res://scenes/enemies/enemy_boss_overseer.tscn", true)
 
-	var run_manager_source := FileAccess.get_file_as_string("res://scripts/game/run_manager.gd")
+	var run_manager_source := FileAccess.get_file_as_string("res://scripts/run/run_manager.gd")
 	_expect(run_manager_source.find("run_objective") >= 0, "RunManager should read run objective resource")
 	_expect(run_manager_source.find("show_victory") >= 0, "RunManager should show victory after boss objective")
 
 
 func _check_spawn_manager_is_resource_driven() -> void:
-	var source := FileAccess.get_file_as_string("res://scripts/game/spawn_manager.gd")
+	var source := FileAccess.get_file_as_string("res://scripts/run/spawn_manager.gd")
 	_expect(source.find("@export var enemy_scenes") == -1, "SpawnManager should read enemy scenes from wave resources")
 	_expect(source.find("res://scenes/enemies/enemy_basic.tscn") == -1, "SpawnManager should not hardcode basic enemy scene")
 	_expect(source.find("res://scenes/enemies/enemy_fast.tscn") == -1, "SpawnManager should not hardcode fast enemy scene")
@@ -1541,6 +1638,16 @@ func _create_test_world_obstacle(position: Vector2, size: Vector2) -> StaticBody
 	shape.shape = rectangle
 	obstacle.add_child(shape)
 	return obstacle
+
+
+func _collect_descendants(node: Node) -> Array[Node]:
+	var descendants: Array[Node] = []
+	if node == null:
+		return descendants
+	for child in node.get_children():
+		descendants.append(child)
+		descendants.append_array(_collect_descendants(child))
+	return descendants
 
 
 func _remove_instance(instance: Node) -> void:

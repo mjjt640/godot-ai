@@ -38,6 +38,7 @@ func _run() -> void:
 	_check_arena_bounds_scene()
 	_check_arena_visual_scene()
 	_check_arena_hazards()
+	_check_world_resource_grouping()
 	_check_default_map_data()
 	_check_default_map_tile_library()
 	_check_game_root_scene()
@@ -68,6 +69,7 @@ func _run() -> void:
 	_check_upgrade_pool()
 	_check_module_skill_pool()
 	_check_general_skill_pool()
+	_check_upgrade_resource_grouping()
 	_check_upgrade_filtering_rules()
 	_check_upgrade_pool_decoupling()
 	_check_run_tuning()
@@ -169,6 +171,37 @@ func _check_arena_hazards() -> void:
 		_expect(hazard.collision_mask == CollisionLayers.PLAYER, "ArenaVisual hazard should only scan player layer")
 		_expect(hazard.get_node_or_null("DamageTimer") != null, "ArenaVisual hazard should create periodic damage timer")
 	_remove_instance(instance)
+
+
+func _check_world_resource_grouping() -> void:
+	var map_data_source := FileAccess.get_file_as_string("res://resources/maps/map_data.gd")
+	_expect(map_data_source.find("res://resources/world/visuals/arena_visual_data.gd") >= 0, "MapData should preload ArenaVisualData from resources/world/visuals")
+
+	var arena_visual_source := FileAccess.get_file_as_string("res://scripts/world/arena_visual.gd")
+	_expect(arena_visual_source.find("res://resources/world/visuals/default_arena_visual.tres") >= 0, "ArenaVisual should load default visual data from resources/world/visuals")
+
+	var default_map := load("res://resources/maps/default_map.tres") as MapData
+	if default_map != null and default_map.visual_data != null:
+		var visual_path := String(default_map.visual_data.resource_path)
+		_expect(visual_path.contains("/resources/world/visuals/"), "Default map visual resource should live under resources/world/visuals")
+
+	var default_visual := load("res://resources/world/visuals/default_arena_visual.tres") as ArenaVisualData
+	_expect(default_visual != null, "Default arena visual resource should exist under resources/world/visuals")
+	if default_visual != null:
+		for obstacle in default_visual.obstacles:
+			if obstacle == null:
+				continue
+			var obstacle_path := String(obstacle.resource_path)
+			_expect(obstacle_path.contains("/resources/world/obstacles/"), "ArenaVisualData obstacles should live under resources/world/obstacles")
+		for hazard in default_visual.hazards:
+			if hazard == null:
+				continue
+			var hazard_path := String(hazard.resource_path)
+			_expect(hazard_path.contains("/resources/world/hazards/"), "ArenaVisualData hazards should live under resources/world/hazards")
+
+	_expect(FileAccess.file_exists("res://resources/world/visuals/arena_visual_data.gd"), "ArenaVisualData script should live under resources/world/visuals")
+	_expect(FileAccess.file_exists("res://resources/world/hazards/hazard_data.gd"), "HazardData script should live under resources/world/hazards")
+	_expect(FileAccess.file_exists("res://resources/world/obstacles/obstacle_data.gd"), "ObstacleData script should live under resources/world/obstacles")
 
 
 func _check_default_map_data() -> void:
@@ -1284,6 +1317,58 @@ func _check_general_skill_pool() -> void:
 	_expect(_has_common_rare_epic(xp_gain_rarities), "XP gain speed should have common, rare and epic variants")
 
 
+func _check_upgrade_resource_grouping() -> void:
+	var module_install_pool_path := "res://resources/upgrades/pools/default_upgrade_pool.tres"
+	var module_skill_pool_path := "res://resources/upgrades/pools/default_module_skill_pool.tres"
+	var general_skill_pool_path := "res://resources/upgrades/pools/default_general_skill_pool.tres"
+	_expect(FileAccess.file_exists(module_install_pool_path), "Module install pool should live under resources/upgrades/pools")
+	_expect(FileAccess.file_exists(module_skill_pool_path), "Module skill pool should live under resources/upgrades/pools")
+	_expect(FileAccess.file_exists(general_skill_pool_path), "General skill pool should live under resources/upgrades/pools")
+
+	var module_install_pool := load(module_install_pool_path) as UpgradePoolData
+	var module_skill_pool := load(module_skill_pool_path) as UpgradePoolData
+	var general_skill_pool := load(general_skill_pool_path) as UpgradePoolData
+
+	if module_install_pool != null:
+		for option in module_install_pool.options:
+			if option == null:
+				continue
+			var option_path := String(option.resource_path)
+			_expect(option_path.contains("/resources/upgrades/modules/"), "Module install option should live under resources/upgrades/modules: %s" % option.id)
+			if option.module != null:
+				var module_path := String(option.module.resource_path)
+				_expect(
+					module_path.contains("/resources/modules/fire_modes/") or module_path.contains("/resources/modules/payloads/"),
+					"Installed module should live under fire_modes or payloads: %s" % option.id
+				)
+
+	if module_skill_pool != null:
+		for option in module_skill_pool.options:
+			if option == null:
+				continue
+			var option_path := String(option.resource_path)
+			_expect(option_path.contains("/resources/upgrades/modules/"), "Module skill option should live under resources/upgrades/modules: %s" % option.id)
+
+	if general_skill_pool != null:
+		for option in general_skill_pool.options:
+			if option == null:
+				continue
+			var option_path := String(option.resource_path)
+			_expect(
+				option_path.contains("/resources/upgrades/general/") or option_path.contains("/resources/upgrades/economy/"),
+				"General skill option should live under resources/upgrades/general or economy: %s" % option.id
+			)
+
+	var build_state_source := FileAccess.get_file_as_string("res://scripts/build/build_state.gd")
+	_expect(build_state_source.find("res://resources/modules/fire_modes/") >= 0, "BuildState should load default fire modules from resources/modules/fire_modes")
+	_expect(build_state_source.find("res://resources/modules/payloads/") >= 0, "BuildState should load default payload modules from resources/modules/payloads")
+
+	var upgrade_manager_source := FileAccess.get_file_as_string("res://scripts/progression/upgrade_manager.gd")
+	_expect(upgrade_manager_source.find("res://resources/upgrades/pools/default_upgrade_pool.tres") >= 0, "UpgradeManager should load module install pool from resources/upgrades/pools")
+	_expect(upgrade_manager_source.find("res://resources/upgrades/pools/default_module_skill_pool.tres") >= 0, "UpgradeManager should load module skill pool from resources/upgrades/pools")
+	_expect(upgrade_manager_source.find("res://resources/upgrades/pools/default_general_skill_pool.tres") >= 0, "UpgradeManager should load general skill pool from resources/upgrades/pools")
+
+
 func _check_upgrade_filtering_rules() -> void:
 	var pool := load("res://resources/upgrades/pools/default_upgrade_pool.tres") as UpgradePoolData
 	var module_skill_pool := load("res://resources/upgrades/pools/default_module_skill_pool.tres") as UpgradePoolData
@@ -1484,7 +1569,7 @@ func _check_run_tuning() -> void:
 
 
 func _check_map_documentation() -> void:
-	var source := FileAccess.get_file_as_string("res://docs/map_architecture.md")
+	var source := FileAccess.get_file_as_string("res://docs/architecture/map_architecture.md")
 	_expect(not source.is_empty(), "Map architecture documentation should exist")
 	_expect(source.find("MapData") >= 0, "Map architecture documentation should describe MapData")
 	_expect(source.find("ArenaVisual") >= 0, "Map architecture documentation should describe ArenaVisual")

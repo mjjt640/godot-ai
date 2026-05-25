@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/world/arena_visual.gd" id="1_visual"]
 [ext_resource type="Resource" path="res://resources/runs/default_run_tuning.tres" id="2_tuning"]
-[ext_resource type="Resource" path="res://resources/world/default_arena_visual.tres" id="3_visual_data"]
+[ext_resource type="Resource" path="res://resources/world/visuals/default_arena_visual.tres" id="3_visual_data"]
 
 [node name="ArenaVisual" type="Node2D"]
 script = ExtResource("1_visual")

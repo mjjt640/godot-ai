@@ -109,7 +109,7 @@
 1. 文件数量持续增长的目录必须尽早分子目录，不允许长期扁平堆放。
 2. `resources/upgrades/` 按 `pools/`、`stats/`、`general/`、`modules/`、`economy/` 拆分。
 3. `resources/modules/` 按 `fire_modes/` 和 `payloads/` 拆分。
-4. `resources/world/` 后续按 `visuals/`、`hazards/`、`obstacles/` 拆分。
+4. `resources/world/` 按 `visuals/`、`hazards/`、`obstacles/` 拆分。
 
 ## docs 目录规范
 

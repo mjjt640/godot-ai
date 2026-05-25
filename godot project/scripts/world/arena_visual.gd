@@ -21,7 +21,7 @@ const LAYER_DEFINITIONS := [
 ]
 
 @export var run_tuning: RunTuningData = preload("res://resources/runs/default_run_tuning.tres")
-@export var visual_data: Resource = preload("res://resources/world/default_arena_visual.tres")
+@export var visual_data: Resource = preload("res://resources/world/visuals/default_arena_visual.tres")
 
 var _layers: Dictionary = {}
 var _draw_layers: Array[Node2D] = []

@@ -2,51 +2,48 @@
 
 ## Godot 插件选择规则
 
-这个项目在 `res://addons` 下包含两个编辑器插件：
+这个项目在 `res://addons` 下只保留一个 MCP 编辑器插件：
 
-- `godot_mcp`（`Godot MCP Native`）
-- `hasturoperationgd`（`HasturOperationGD`）
+- `godot_mcp_server`（`MCP Server`，来自 `godot-mcp-enhanced`）
 
-使用下面的规则在它们之间做选择。
+所有 Godot 编辑器自动化优先围绕这个插件和外部 `godot-mcp-enhanced` Node MCP 服务进行。
 
 ### 插件职责
 
-- `godot_mcp` 是默认集成路径。  
-  用于结构化编辑器访问、项目检查、场景和脚本查询、可重复自动化，以及 agent 驱动的工作流。
-
-- `hasturoperationgd` 是回退执行路径。  
-  当 `godot_mcp` 没有提供所需能力时，用它在编辑器内执行一次性的 GDScript。
+- `godot_mcp_server` 负责 Godot Editor 侧连接、场景/节点/资源/动画/UI 等编辑器操作，以及 agent 驱动的可重复工作流。
+- 任意 GDScript 执行统一走 `godot-mcp-enhanced` 的 `execute_gdscript` 工具，并通过 `confirm_and_execute` 确认流程执行。
 
 ### 默认选择规则
 
-- 优先使用 `godot_mcp`。
-- 只有当 `godot_mcp` 不能直接完成任务，或者完成成本明显高于一段短小、目标明确的脚本时，才使用 `hasturoperationgd`。
+- 优先使用 `godot-mcp-enhanced` 已有的结构化工具，例如读取场景、编辑节点、验证项目、运行检查。
+- 只有当结构化工具无法覆盖需求，且脚本足够短小、目标明确、无副作用边界清晰时，才使用 `execute_gdscript`。
+- `execute_gdscript` 必须保留确认 token 流程，不要绕过 `confirm_and_execute`。
 
-### 适合使用 `godot_mcp` 的情况
+### 适合使用结构化 MCP 工具的情况
 
 - 读取项目、场景、脚本或编辑器状态
 - 执行标准化、可重复的编辑器操作
 - 构建需要保持可预测、可审计的 agent 工作流
 - 通过稳定接口暴露 Godot 能力
 
-### 适合使用 `hasturoperationgd` 的情况
+### 适合使用 `execute_gdscript` 的情况
 
 - 快速测试一个小型编辑器侧想法
 - 运行一次性的自定义 GDScript 片段
-- 访问 `godot_mcp` 还没有覆盖到的编辑器 API
+- 访问结构化 MCP 工具还没有覆盖到的 Godot API
 - 在决定是否把某个能力正式收进 MCP 之前做探查或调试
 
 ### 冲突规避
 
-- 不要同时用两个插件修改同一个场景、节点树或脚本。
-- 如果两个插件都能解决问题，选择 `godot_mcp`。
-- 如果使用 `hasturoperationgd` 作为回退方案，脚本必须保持小而专一。
-- 某个 `hasturoperationgd` 工作流如果被重复成功使用，后续应考虑把它提升为 MCP 能力。
+- 不要在同一轮里混用结构化编辑工具和自定义脚本修改同一个场景、节点树或脚本。
+- 如果结构化工具和 `execute_gdscript` 都能解决问题，选择结构化工具。
+- 如果使用 `execute_gdscript`，脚本必须保持小而专一。
+- 某个 `execute_gdscript` 工作流如果被重复成功使用，后续应考虑把它提升为结构化 MCP 能力。
 
 ### 简短判断法
 
-- 如果任务更像一次 API 调用，就用 `godot_mcp`。
-- 如果任务更像一次临时编辑器控制台命令，就用 `hasturoperationgd`。
+- 如果任务更像一次 API 调用，就用结构化 MCP 工具。
+- 如果任务更像一次临时编辑器控制台命令，就用 `execute_gdscript`，并保留确认流程。
 
 ## 文档语言规则
 
@@ -80,6 +77,9 @@
 - 把 `module_applier` 视为唯一负责把 build 选择结算为武器行为的地方。
 - 把 `shot_profile` 视为武器执行边界对象。
 - 所有会改变流程的效果都应挂在固定战斗阶段上，不要发明新的战斗主循环。
+- 角色模型和手持武器只定义基础武器母题与视觉身份，不作为攻击规则的真相来源。
+- `CharacterData` 只负责角色基础属性、局内初始模块和开局构筑倾向；不要把角色形态扩展成第二套攻击系统。
+- 模块仍然是局内攻击变化的主要来源。角色专属武器表现应通过模块命名、子弹/VFX、攻击动画覆盖来解释，例如长枪角色的三连发可以表现为连续枪影，爆炸弹可以表现为枪尖震爆。
 - 静态平衡数据优先使用 `Resource`，在可行情况下保持一条记录一个文件，并确保运行时状态不进入这些资源。
 - 除非用户明确要求扩展成更大的数据管线，否则不要把 JSON 或数据库作为这个项目的主平衡数据格式。
 - 如果未来平衡编辑需求变大，优先采用 `CSV -> Resource` 的导入路径，而不是改成运行时直接读 CSV。

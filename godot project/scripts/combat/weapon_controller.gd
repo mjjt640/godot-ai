@@ -3,6 +3,7 @@ extends Node2D
 
 @export var build_state_path: NodePath = ^"../../BuildState"
 @export var projectile_scene: PackedScene = preload("res://scenes/weapons/projectile.tscn")
+@export var projectile_spawn_offset: float = 20.0
 
 var _cooldown_remaining: float = 0.0
 var _burst_active: bool = false
@@ -49,10 +50,11 @@ func _spawn_projectile_group(profile: ShotProfile, target_position: Vector2) -> 
 		base_direction = Vector2.RIGHT
 
 	for angle_offset in profile.angles:
+		var projectile_direction := base_direction.rotated(deg_to_rad(angle_offset))
 		var projectile := projectile_scene.instantiate() as ProjectileController
 		get_tree().current_scene.add_child(projectile)
-		projectile.global_position = global_position
-		projectile.configure(profile, base_direction.rotated(deg_to_rad(angle_offset)))
+		projectile.global_position = global_position + projectile_direction * projectile_spawn_offset
+		projectile.configure(profile, projectile_direction)
 
 
 func _find_nearest_enemy(attack_range: float) -> Node2D:

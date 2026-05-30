@@ -27,7 +27,12 @@ var _xp_magnet_radius_add: float = 0.0
 var _xp_magnet_radius_mult: float = 1.0
 var _luck_add: float = 0.0
 var _luck_mult: float = 1.0
+var _camera_shake_tween: Tween
+var _last_camera_shake_msec: int = -1000000
+var _base_camera_offset: Vector2 = Vector2.ZERO
 @onready var _visual: CanvasItem = get_node_or_null("Visual") as CanvasItem
+@onready var _visual_animator: Node = get_node_or_null("Visual")
+@onready var _camera: Camera2D = get_node_or_null("Camera2D") as Camera2D
 
 
 func _ready() -> void:
@@ -36,6 +41,8 @@ func _ready() -> void:
 	collision_mask = CollisionLayers.WORLD
 	add_to_group("player")
 	health = max_health
+	if _camera != null:
+		_base_camera_offset = _camera.offset
 	health_changed.emit(health, max_health)
 
 
@@ -62,6 +69,8 @@ func _get_character_float(stat_name: StringName, default_value: float) -> float:
 
 func _physics_process(_delta: float) -> void:
 	var input_vector := Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	if _visual_animator != null and _visual_animator.has_method("set_move_vector"):
+		_visual_animator.call("set_move_vector", input_vector)
 	velocity = input_vector * get_move_speed() + _knockback_velocity
 	move_and_slide()
 	_knockback_velocity = _knockback_velocity.move_toward(Vector2.ZERO, knockback_decay * _delta)
@@ -124,9 +133,35 @@ func apply_knockback(direction: Vector2, force: float) -> void:
 
 
 func _play_hit_feedback() -> void:
-	if _visual == null or combat_feedback == null:
+	if combat_feedback == null:
 		return
 
-	_visual.modulate = combat_feedback.get("player_hit_flash_color")
-	var tween := create_tween()
-	tween.tween_property(_visual, "modulate", Color.WHITE, float(combat_feedback.get("player_hit_flash_duration")))
+	if _visual != null:
+		_visual.modulate = combat_feedback.get("player_hit_flash_color")
+		var tween := create_tween()
+		tween.tween_property(_visual, "modulate", Color.WHITE, float(combat_feedback.get("player_hit_flash_duration")))
+	_play_hit_camera_shake()
+
+
+func _play_hit_camera_shake() -> void:
+	if _camera == null:
+		return
+
+	var shake_strength := float(combat_feedback.get("camera_shake_strength"))
+	var shake_duration := float(combat_feedback.get("camera_shake_duration"))
+	if shake_strength <= 0.0 or shake_duration <= 0.0:
+		return
+
+	var min_interval := maxf(float(combat_feedback.get("camera_shake_min_interval")), 0.0)
+	var now_msec := Time.get_ticks_msec()
+	if now_msec - _last_camera_shake_msec < int(min_interval * 1000.0):
+		return
+	_last_camera_shake_msec = now_msec
+
+	if is_instance_valid(_camera_shake_tween):
+		_camera_shake_tween.kill()
+		_camera.offset = _base_camera_offset
+	_camera_shake_tween = _camera.create_tween()
+	var shake_offset := Vector2(randf_range(-shake_strength, shake_strength), randf_range(-shake_strength, shake_strength))
+	_camera_shake_tween.tween_property(_camera, "offset", _base_camera_offset + shake_offset, shake_duration * 0.5)
+	_camera_shake_tween.tween_property(_camera, "offset", _base_camera_offset, shake_duration * 0.5)

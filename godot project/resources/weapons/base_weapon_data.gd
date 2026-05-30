@@ -2,8 +2,8 @@ class_name BaseWeaponData
 extends Resource
 
 @export var id: StringName = &"core_bolt"
-@export var display_name: String = "核心弹"
-@export_multiline var description: String = "一把基础自动射击武器。"
+@export var display_name: String = "枪芒"
+@export_multiline var description: String = "以长枪为基础武器母题的自动武器，用模块改变连刺、扫击、贯穿和震爆。"
 
 @export var damage: float = 10.0
 @export var cooldown: float = 0.55

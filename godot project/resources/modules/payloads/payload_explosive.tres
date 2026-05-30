@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_payload")
 id = &"explosive_round"
-display_name = "爆炸弹"
+display_name = "震爆枪锋"
 description = "命中后对附近敌人造成溅射伤害。"
 slot_type = &"payload"
 rarity = 2

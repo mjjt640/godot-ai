@@ -7,8 +7,8 @@
 [resource]
 script = ExtResource("1_character")
 id = &"core_runner"
-display_name = "核心行者"
-description = "均衡的初始角色，适合熟悉基础移动、射击和经验拾取节奏。"
+display_name = "长枪行者"
+description = "以长枪为基础武器母题的均衡角色，适合熟悉自动锁敌、连刺和经验拾取节奏。"
 move_speed = 260.0
 max_health = 100.0
 xp_magnet_radius = 150.0

@@ -7,8 +7,8 @@
 [resource]
 script = ExtResource("1_character")
 id = &"ember_marksman"
-display_name = "烬火射手"
-description = "初始使用穿透弹，暴击能力更强，但拾取范围更短。"
+display_name = "烬火枪卫"
+description = "初始使用贯穿枪锋，暴击能力更强，但拾取范围更短。"
 move_speed = 245.0
 max_health = 94.0
 xp_magnet_radius = 118.0

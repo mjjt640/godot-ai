@@ -6,7 +6,7 @@
 script = ExtResource("1_upgrade")
 id = &"upgrade_crit_chance_boost"
 display_name = "弱点标定"
-description = "提高当前弹头构筑的暴击率。"
+description = "提高当前枪锋构筑的暴击率。"
 upgrade_type = 1
 rarity = 1
 weight = 1.0

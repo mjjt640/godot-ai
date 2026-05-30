@@ -22,6 +22,7 @@ xp_drop_scatter_radius = 28.0
 xp_drop_scatter_duration = 0.18
 camera_shake_strength = 4.0
 camera_shake_duration = 0.12
+camera_shake_min_interval = 0.08
 explosion_effect_duration = 0.18
 explosion_effect_ring_width = 5.0
 explosion_effect_ring_color = Color(1, 0.56, 0.18, 0.9)

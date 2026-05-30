@@ -6,7 +6,7 @@
 script = ExtResource("1_upgrade")
 id = &"upgrade_blast_radius_boost"
 display_name = "爆炸范围强化"
-description = "扩大爆炸弹的溅射半径。"
+description = "扩大震爆枪锋的溅射半径。"
 upgrade_type = 1
 rarity = 1
 weight = 1.0

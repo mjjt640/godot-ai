@@ -6,7 +6,7 @@
 script = ExtResource("1_fire")
 id = &"burst_fire"
 display_name = "三连发"
-description = "快速发射三枚子弹，每发伤害较低。"
+description = "快速刺出三段枪芒，每段伤害较低。"
 slot_type = &"fire_mode"
 rarity = 1
 damage_mult = 0.78

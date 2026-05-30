@@ -6,7 +6,7 @@
 script = ExtResource("1_fire")
 id = &"single_shot"
 display_name = "单发"
-description = "发射一枚稳定的子弹。"
+description = "刺出一道稳定枪芒。"
 slot_type = &"fire_mode"
 rarity = 0
 projectile_count = 1

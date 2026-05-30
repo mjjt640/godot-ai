@@ -7,7 +7,7 @@
 script = ExtResource("1_upgrade")
 id = &"upgrade_burst_fire"
 display_name = "安装三连发"
-description = "将发射模式替换为快速三连发。"
+description = "将发射模式替换为快速三段刺击。"
 upgrade_type = 0
 rarity = 1
 module = ExtResource("2_module")

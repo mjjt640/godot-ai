@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_payload")
 id = &"normal_payload"
-display_name = "普通弹头"
+display_name = "标准枪锋"
 description = "命中后造成基础伤害。"
 slot_type = &"payload"
 rarity = 0

@@ -6,7 +6,7 @@
 script = ExtResource("1_fire")
 id = &"spread_fire"
 display_name = "散射"
-description = "向扇形范围发射三枚子弹。"
+description = "向扇形范围扫出三道枪影。"
 slot_type = &"fire_mode"
 rarity = 1
 damage_mult = 0.72

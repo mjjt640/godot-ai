@@ -5,8 +5,8 @@
 [resource]
 script = ExtResource("1_base")
 id = &"core_bolt"
-display_name = "核心弹"
-description = "一把稳定的自动武器，用来验证不同模块组合。"
+display_name = "枪芒"
+description = "以长枪为基础武器母题的自动武器，用模块改变连刺、扫击、贯穿和震爆。"
 damage = 10.0
 cooldown = 0.55
 projectile_speed = 520.0

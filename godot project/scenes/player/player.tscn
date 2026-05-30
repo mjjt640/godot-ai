@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/player/player_controller.gd" id="1_player"]
 [ext_resource type="Script" path="res://scripts/combat/weapon_controller.gd" id="2_weapon"]
 [ext_resource type="Resource" path="res://resources/characters/character_core_runner.tres" id="3_character"]
+[ext_resource type="Script" path="res://scripts/player/player_spine_visual.gd" id="4_visual"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_player"]
 radius = 18.0
@@ -14,14 +15,13 @@ character_data = ExtResource("3_character")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_player")
 
-[node name="Visual" type="Polygon2D" parent="."]
-color = Color(0.22, 0.62, 0.95, 1)
-polygon = PackedVector2Array(0, -22, 18, 12, 0, 6, -18, 12)
+[node name="Visual" type="Node2D" parent="."]
+script = ExtResource("4_visual")
 
 [node name="WeaponController" type="Node2D" parent="."]
-position = Vector2(22, 0)
 script = ExtResource("2_weapon")
 
 [node name="Camera2D" type="Camera2D" parent="."]
 enabled = true
 zoom = Vector2(0.9, 0.9)
+position_smoothing_enabled = false

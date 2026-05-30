@@ -6,7 +6,7 @@
 script = ExtResource("1_upgrade")
 id = &"upgrade_blast_aftershock"
 display_name = "爆裂余波"
-description = "爆炸弹头获得更强溅射伤害。"
+description = "震爆枪锋获得更强溅射伤害。"
 upgrade_type = 1
 rarity = 3
 weight = 0.65

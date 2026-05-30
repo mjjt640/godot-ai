@@ -2,8 +2,8 @@ class_name CharacterData
 extends Resource
 
 @export var id: StringName = &"core_runner"
-@export var display_name: String = "核心行者"
-@export_multiline var description: String = "均衡的初始角色，适合熟悉基础移动、射击和经验拾取节奏。"
+@export var display_name: String = "长枪行者"
+@export_multiline var description: String = "以长枪为基础武器母题的均衡角色，适合熟悉自动锁敌、连刺和经验拾取节奏。"
 
 @export var move_speed: float = 260.0
 @export var max_health: float = 100.0

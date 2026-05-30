@@ -6,7 +6,7 @@
 script = ExtResource("1_fire")
 id = &"quick_single"
 display_name = "急速单发"
-description = "保持单发形态，但显著缩短发射间隔。"
+description = "保持单刺形态，但显著缩短出枪间隔。"
 slot_type = &"fire_mode"
 rarity = 1
 damage_mult = 0.86

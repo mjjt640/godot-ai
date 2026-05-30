@@ -6,7 +6,7 @@
 script = ExtResource("1_upgrade")
 id = &"upgrade_piercing_firepower"
 display_name = "贯穿火力"
-description = "穿透弹获得额外穿透。"
+description = "贯穿枪锋获得额外穿透。"
 upgrade_type = 1
 rarity = 2
 weight = 0.85

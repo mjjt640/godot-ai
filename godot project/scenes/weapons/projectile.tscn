@@ -12,5 +12,5 @@ script = ExtResource("1_projectile")
 shape = SubResource("CircleShape2D_projectile")
 
 [node name="Visual" type="Polygon2D" parent="."]
-color = Color(0.95, 0.78, 0.22, 1)
-polygon = PackedVector2Array(13, 0, -8, -5, -8, 5)
+color = Color(0.82, 0.9, 1, 1)
+polygon = PackedVector2Array(24, 0, 10, -5, -14, -3, -23, -1, -23, 1, -14, 3, 10, 5)

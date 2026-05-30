@@ -6,8 +6,8 @@
 [resource]
 script = ExtResource("1_upgrade")
 id = &"upgrade_explosive_round"
-display_name = "安装爆炸弹"
-description = "将弹头替换为命中后造成范围伤害。"
+display_name = "安装震爆枪锋"
+description = "将枪锋替换为命中后震爆范围伤害。"
 upgrade_type = 0
 rarity = 2
 module = ExtResource("2_module")

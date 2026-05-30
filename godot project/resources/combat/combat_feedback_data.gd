@@ -19,6 +19,7 @@ extends Resource
 @export var xp_drop_scatter_duration: float = 0.18
 @export var camera_shake_strength: float = 4.0
 @export var camera_shake_duration: float = 0.12
+@export var camera_shake_min_interval: float = 0.08
 @export var explosion_effect_duration: float = 0.18
 @export var explosion_effect_ring_width: float = 5.0
 @export var explosion_effect_ring_color: Color = Color(1.0, 0.56, 0.18, 0.9)

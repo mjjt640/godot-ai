@@ -6,8 +6,8 @@
 [resource]
 script = ExtResource("1_upgrade")
 id = &"upgrade_quick_core"
-display_name = "安装急速核心"
-description = "将发射模式替换为更快的稳定单发。"
+display_name = "安装疾刺"
+description = "将发射模式替换为更快的稳定单刺。"
 upgrade_type = 0
 rarity = 1
 module = ExtResource("2_module")

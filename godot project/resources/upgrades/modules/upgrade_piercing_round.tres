@@ -6,8 +6,8 @@
 [resource]
 script = ExtResource("1_upgrade")
 id = &"upgrade_piercing_round"
-display_name = "安装穿透弹"
-description = "将弹头替换为可以穿透敌人的子弹。"
+display_name = "安装贯穿枪锋"
+description = "将枪锋替换为可以贯穿敌人的枪芒。"
 upgrade_type = 0
 rarity = 1
 module = ExtResource("2_module")

@@ -5,8 +5,8 @@
 [resource]
 script = ExtResource("1_payload")
 id = &"piercing_round"
-display_name = "穿透弹"
-description = "子弹可以额外穿透两个敌人。"
+display_name = "贯穿枪锋"
+description = "枪芒可以额外穿透两个敌人。"
 slot_type = &"payload"
 rarity = 1
 damage_mult = 0.9

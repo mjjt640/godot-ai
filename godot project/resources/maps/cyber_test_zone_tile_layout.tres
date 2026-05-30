@@ -1,0 +1,57 @@
+[gd_resource type="Resource" script_class="MapTileLayoutData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/maps/map_tile_layout_data.gd" id="1_layout"]
+
+[resource]
+script = ExtResource("1_layout")
+tile_world_size = Vector2(256, 256)
+base_tile_texture_size = Vector2i(256, 256)
+base_source_cell_size = Vector2i(0, 0)
+tile_edge_overlap = 0.0
+base_tile_draw_scale = 1.0
+base_tile_alpha_bleed = false
+base_tile_alpha_bleed_iterations = 18
+base_dual_grid_enabled = false
+base_dual_grid_offset_factor = Vector2(0.5, 0.5)
+base_dual_grid_alpha = 0.42
+base_alpha = 1.0
+draw_background_texture = false
+background_world_margin = Vector2(0, 0)
+draw_ground_base_color = true
+draw_base_tiles = false
+use_curated_arena_layout = true
+arena_center_tile_indices = Array[int]([])
+arena_lane_tile_indices = Array[int]([])
+arena_ring_tile_indices = Array[int]([])
+arena_rubble_tile_indices = Array[int]([])
+draw_procedural_grid = false
+draw_procedural_panel_lines = false
+draw_procedural_cracks = false
+draw_procedural_neon_lines = false
+ground_detail_spacing = Vector2i(20, 16)
+ground_detail_phase = Vector2i(1, 1)
+ground_detail_alpha = 0.22
+decal_spacing = Vector2i(30, 24)
+decal_phase = Vector2i(2, 2)
+decal_alpha = 0.16
+neon_spacing = Vector2i(40, 30)
+neon_phase = Vector2i(3, 2)
+neon_alpha = 0.24
+draw_hazard_textures = false
+hazard_texture_alpha = 0.0
+hazard_fill_alpha = 0.0
+random_prop_count = 0
+random_obstacle_count = 0
+random_prop_min_distance_from_origin = 460.0
+random_obstacle_min_distance_from_origin = 760.0
+random_obstacle_min_spacing = 320.0
+random_seed = 1827
+prop_scale_range = Vector2(0.42, 0.78)
+obstacle_scale_range = Vector2(0.58, 0.95)
+prop_visual_scale_multiplier = 0.88
+obstacle_visual_scale_multiplier = 0.84
+prop_tint = Color(0.94, 0.88, 0.74, 0.92)
+obstacle_tint = Color(0.9, 0.84, 0.72, 0.96)
+obstacle_collision_scale = 1.0
+obstacle_collision_footprint_scale = Vector2(0.48, 0.18)
+obstacle_collision_footprint_offset = Vector2(0, 0.3)

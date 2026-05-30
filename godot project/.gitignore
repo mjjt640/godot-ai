@@ -3,6 +3,7 @@
 /android/
 *.tmp
 /bin/**/~*
+/art/maps/generated_tiles/
 
 # Locally installed editor plugins that are not part of the committed gameplay build.
 /addons/phantom_camera/

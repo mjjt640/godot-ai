@@ -12,11 +12,13 @@ enum LayerKind {
 
 var _run_tuning: RunTuningData
 var _visual_data: Resource
+var _tile_layout: Resource
 
 
-func configure(tuning: RunTuningData, data: Resource) -> void:
+func configure(tuning: RunTuningData, data: Resource, tile_layout: Resource = null) -> void:
 	_run_tuning = tuning
 	_visual_data = data
+	_tile_layout = tile_layout
 	queue_redraw()
 
 
@@ -38,13 +40,18 @@ func _draw() -> void:
 
 
 func _draw_ground_base(rect: Rect2) -> void:
+	if not _get_layout_bool("draw_ground_base_color", true):
+		return
 	draw_rect(rect, _get_color("arena_color", Color(0.05, 0.06, 0.08, 1.0)), true)
 
 
 func _draw_ground_detail(rect: Rect2) -> void:
-	_draw_grid(rect)
-	_draw_panel_lines(rect)
-	_draw_cracks(rect)
+	if _get_layout_bool("draw_procedural_grid", true):
+		_draw_grid(rect)
+	if _get_layout_bool("draw_procedural_panel_lines", true):
+		_draw_panel_lines(rect)
+	if _get_layout_bool("draw_procedural_cracks", true):
+		_draw_cracks(rect)
 
 
 func _draw_grid(rect: Rect2) -> void:
@@ -106,6 +113,9 @@ func _draw_cracks(rect: Rect2) -> void:
 
 
 func _draw_neon_detail(rect: Rect2) -> void:
+	if not _get_layout_bool("draw_procedural_neon_lines", true):
+		return
+
 	var interval := _get_float("neon_lane_interval", 512.0)
 	if interval <= 0.0:
 		return
@@ -154,3 +164,12 @@ func _get_float(property_name: String, default_value: float) -> float:
 	if value == null:
 		return default_value
 	return float(value)
+
+
+func _get_layout_bool(property_name: String, default_value: bool) -> bool:
+	if _tile_layout == null:
+		return default_value
+	var value: Variant = _tile_layout.get(property_name)
+	if value == null:
+		return default_value
+	return bool(value)

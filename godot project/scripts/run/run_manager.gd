@@ -31,7 +31,6 @@ const RunCombatRewardControllerScript = preload("res://scripts/run/run_combat_re
 @onready var _build_state: BuildState = get_node_or_null(build_state_path)
 @onready var _player: PlayerController = get_node_or_null(player_path)
 @onready var _pickup_container: Node2D = get_node_or_null(pickup_container_path)
-var _camera: Camera2D
 var _run_time: float = 0.0
 var _run_finished: bool = false
 var _objective_controller
@@ -61,7 +60,7 @@ func _ready() -> void:
 	if _arena_bounds != null:
 		_arena_bounds.call("configure", run_tuning)
 	if _arena_visual != null:
-		_arena_visual.call("configure", run_tuning, map_data.get("visual_data"))
+		_arena_visual.call("configure", run_tuning, map_data.get("visual_data"), map_data.get("tile_library"), map_data.get("tile_layout"))
 	if _xp_manager != null:
 		_xp_manager.level_up_requested.connect(_on_level_up_requested)
 	if _level_up_panel != null:
@@ -69,10 +68,9 @@ func _ready() -> void:
 		_level_flow_controller.initialize(_level_up_panel)
 	if _player != null:
 		_player.died.connect(_on_player_died)
-		_camera = _player.get_node_or_null("Camera2D") as Camera2D
 	if _build_state != null and _player != null:
 		_build_state.configure_from_character(_player.character_data)
-	_combat_reward_controller.configure(_xp_manager, xp_pickup_scene, _pickup_container, run_tuning, combat_feedback, _camera, get_tree())
+	_combat_reward_controller.configure(_xp_manager, xp_pickup_scene, _pickup_container, run_tuning, combat_feedback, get_tree())
 	if _hud != null:
 		_hud.bind(_build_state, _xp_manager, _player)
 		_hud.update_run_status(_run_time, run_objective)

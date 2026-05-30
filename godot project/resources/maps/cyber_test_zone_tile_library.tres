@@ -1,77 +1,20 @@
-[gd_resource type="Resource" script_class="MapTileLibraryData" load_steps=66 format=3]
+[gd_resource type="Resource" script_class="MapTileLibraryData" load_steps=2 format=3]
 
 [ext_resource type="Script" path="res://resources/maps/map_tile_library_data.gd" id="1_library"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/tiles/floor_metal_01.png" id="2_floor_metal"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/tiles/floor_crack_01.png" id="3_floor_crack"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/tiles/floor_grid_01.png" id="4_floor_grid"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/tiles/floor_panel_01.png" id="5_floor_panel"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/tiles/floor_stain_01.png" id="6_floor_stain"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/tiles/floor_burn_01.png" id="7_floor_burn"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/tiles/floor_crack_deep_01.png" id="8_floor_crack_deep"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/tiles/floor_core_socket_01.png" id="9_floor_core_socket"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/tiles/floor_corner_panel_01.png" id="10_floor_corner_panel"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/tiles/floor_pipe_01.png" id="11_floor_pipe"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/tiles/floor_broken_grid_01.png" id="12_floor_broken_grid"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/tiles/floor_terminal_panel_01.png" id="13_floor_terminal_panel"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/tiles/floor_circuit_cyan_01.png" id="14_floor_circuit_cyan"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/tiles/floor_warning_pink_01.png" id="15_floor_warning_pink"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/tiles/floor_neon_cyan_h_01.png" id="16_floor_neon_cyan_h"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/tiles/floor_neon_cyan_v_01.png" id="17_floor_neon_cyan_v"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/decals/decal_crack_thin_01.png" id="18_decal_crack_thin"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/decals/decal_crack_long_01.png" id="19_decal_crack_long"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/decals/decal_corner_plate_01.png" id="20_decal_corner_plate"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/decals/decal_scatter_dark_01.png" id="21_decal_scatter_dark"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/decals/decal_rubble_dark_01.png" id="22_decal_rubble_dark"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/decals/decal_oil_smear_01.png" id="23_decal_oil_smear"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/decals/decal_burn_mark_01.png" id="24_decal_burn_mark"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/decals/decal_bolts_01.png" id="25_decal_bolts_01"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/decals/decal_bolts_02.png" id="26_decal_bolts_02"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/decals/decal_scratches_01.png" id="27_decal_scratches"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/decals/decal_plate_chunk_01.png" id="28_decal_plate_chunk_01"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/decals/decal_plate_chunk_02.png" id="29_decal_plate_chunk_02"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/decals/decal_wire_cut_01.png" id="30_decal_wire_cut_01"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/decals/decal_wire_cut_02.png" id="31_decal_wire_cut_02"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/decals/decal_node_cyan_01.png" id="32_decal_node_cyan"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/decals/decal_warning_mark_01.png" id="33_decal_warning_mark"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/hazards/hazard_core_cracked_01.png" id="34_hazard_core_cracked"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/hazards/hazard_disc_rune_01.png" id="35_hazard_disc_rune"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/hazards/hazard_vent_rupture_01.png" id="36_hazard_vent_rupture"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/hazards/hazard_crack_glow_01.png" id="37_hazard_crack_glow"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/hazards/hazard_warning_square_01.png" id="38_hazard_warning_square"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/hazards/hazard_mine_round_01.png" id="39_hazard_mine_round"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/hazards/hazard_rubble_hot_01.png" id="40_hazard_rubble_hot"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/hazards/hazard_gate_frame_01.png" id="41_hazard_gate_frame"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/hazards/hazard_plate_round_01.png" id="42_hazard_plate_round"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/hazards/hazard_strip_glow_01.png" id="43_hazard_strip_glow"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/hazards/hazard_node_broken_01.png" id="44_hazard_node_broken"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/hazards/hazard_frame_empty_01.png" id="45_hazard_frame_empty"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/hazards/hazard_core_cluster_01.png" id="46_hazard_core_cluster"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/hazards/hazard_patch_hot_01.png" id="47_hazard_patch_hot"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/hazards/hazard_spike_strip_01.png" id="48_hazard_spike_strip"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/hazards/hazard_dark_core_01.png" id="49_hazard_dark_core"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/hazard_tiles/hazard_ground_core_01.png" id="50_hazard_ground_core"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/hazard_tiles/hazard_ground_disc_01.png" id="51_hazard_ground_disc"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/hazard_tiles/hazard_ground_vent_01.png" id="52_hazard_ground_vent"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/hazard_tiles/hazard_ground_crack_01.png" id="53_hazard_ground_crack"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/hazard_tiles/hazard_ground_warning_square_01.png" id="54_hazard_ground_warning_square"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/hazard_tiles/hazard_ground_mine_01.png" id="55_hazard_ground_mine"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/hazard_tiles/hazard_ground_rubble_01.png" id="56_hazard_ground_rubble"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/hazard_tiles/hazard_ground_gate_frame_01.png" id="57_hazard_ground_gate_frame"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/hazard_tiles/hazard_ground_plate_01.png" id="58_hazard_ground_plate"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/hazard_tiles/hazard_ground_strip_01.png" id="59_hazard_ground_strip"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/hazard_tiles/hazard_ground_node_01.png" id="60_hazard_ground_node"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/hazard_tiles/hazard_ground_empty_frame_01.png" id="61_hazard_ground_empty_frame"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/hazard_tiles/hazard_ground_cluster_01.png" id="62_hazard_ground_cluster"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/hazard_tiles/hazard_ground_patch_01.png" id="63_hazard_ground_patch"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/hazard_tiles/hazard_ground_spike_strip_01.png" id="64_hazard_ground_spike_strip"]
-[ext_resource type="Texture2D" path="res://art/maps/cyber_test_zone/hazard_tiles/hazard_ground_dark_core_01.png" id="65_hazard_ground_dark_core"]
 
 [resource]
 script = ExtResource("1_library")
 tile_size = Vector2i(256, 256)
-ground_base_tiles = Array[Texture2D]([ExtResource("2_floor_metal"), ExtResource("3_floor_crack"), ExtResource("4_floor_grid"), ExtResource("5_floor_panel"), ExtResource("6_floor_stain"), ExtResource("7_floor_burn")])
-ground_detail_tiles = Array[Texture2D]([ExtResource("8_floor_crack_deep"), ExtResource("9_floor_core_socket"), ExtResource("10_floor_corner_panel"), ExtResource("11_floor_pipe"), ExtResource("12_floor_broken_grid"), ExtResource("13_floor_terminal_panel")])
-neon_detail_tiles = Array[Texture2D]([ExtResource("14_floor_circuit_cyan"), ExtResource("15_floor_warning_pink"), ExtResource("16_floor_neon_cyan_h"), ExtResource("17_floor_neon_cyan_v")])
-decals = Array[Texture2D]([ExtResource("18_decal_crack_thin"), ExtResource("19_decal_crack_long"), ExtResource("20_decal_corner_plate"), ExtResource("21_decal_scatter_dark"), ExtResource("22_decal_rubble_dark"), ExtResource("23_decal_oil_smear"), ExtResource("24_decal_burn_mark"), ExtResource("25_decal_bolts_01"), ExtResource("26_decal_bolts_02"), ExtResource("27_decal_scratches"), ExtResource("28_decal_plate_chunk_01"), ExtResource("29_decal_plate_chunk_02"), ExtResource("30_decal_wire_cut_01"), ExtResource("31_decal_wire_cut_02"), ExtResource("32_decal_node_cyan"), ExtResource("33_decal_warning_mark")])
-hazard_visuals = Array[Texture2D]([ExtResource("34_hazard_core_cracked"), ExtResource("35_hazard_disc_rune"), ExtResource("36_hazard_vent_rupture"), ExtResource("37_hazard_crack_glow"), ExtResource("38_hazard_warning_square"), ExtResource("39_hazard_mine_round"), ExtResource("40_hazard_rubble_hot"), ExtResource("41_hazard_gate_frame"), ExtResource("42_hazard_plate_round"), ExtResource("43_hazard_strip_glow"), ExtResource("44_hazard_node_broken"), ExtResource("45_hazard_frame_empty"), ExtResource("46_hazard_core_cluster"), ExtResource("47_hazard_patch_hot"), ExtResource("48_hazard_spike_strip"), ExtResource("49_hazard_dark_core")])
-hazard_ground_tiles = Array[Texture2D]([ExtResource("50_hazard_ground_core"), ExtResource("51_hazard_ground_disc"), ExtResource("52_hazard_ground_vent"), ExtResource("53_hazard_ground_crack"), ExtResource("54_hazard_ground_warning_square"), ExtResource("55_hazard_ground_mine"), ExtResource("56_hazard_ground_rubble"), ExtResource("57_hazard_ground_gate_frame"), ExtResource("58_hazard_ground_plate"), ExtResource("59_hazard_ground_strip"), ExtResource("60_hazard_ground_node"), ExtResource("61_hazard_ground_empty_frame"), ExtResource("62_hazard_ground_cluster"), ExtResource("63_hazard_ground_patch"), ExtResource("64_hazard_ground_spike_strip"), ExtResource("65_hazard_ground_dark_core")])
+background_texture = null
+ground_base_tiles = Array[Texture2D]([])
+ground_detail_tiles = Array[Texture2D]([])
+neon_detail_tiles = Array[Texture2D]([])
+decals = Array[Texture2D]([])
+hazard_visuals = Array[Texture2D]([])
+hazard_ground_tiles = Array[Texture2D]([])
+prop_visuals = Array[Texture2D]([])
+obstacle_visuals = Array[Texture2D]([])
+background_texture_path = ""
+ground_base_tile_paths = Array[String]([])
+prop_visual_paths = Array[String]([])
+obstacle_visual_paths = Array[String]([])

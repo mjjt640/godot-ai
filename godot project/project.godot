@@ -10,14 +10,18 @@ config_version=5
 
 [application]
 
-config/name="新建游戏项目"
-run/main_scene="res://scenes/main/game_root.tscn"
+config/name="核心突围"
+run/main_scene="res://scenes/ui/main_menu.tscn"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/godot_mcp/plugin.cfg", "res://addons/hasturoperationgd/plugin.cfg")
+enabled=PackedStringArray("res://addons/godot_mcp_server/plugin.cfg")
+
+[extension_list]
+
+enabled=PackedStringArray("res://bin/spine_godot_extension.gdextension")
 
 [input]
 

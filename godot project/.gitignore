@@ -2,6 +2,7 @@
 .godot/
 /android/
 *.tmp
+/bin/**/~*
 
 # Locally installed editor plugins that are not part of the committed gameplay build.
 /addons/phantom_camera/

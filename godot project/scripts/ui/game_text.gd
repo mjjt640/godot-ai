@@ -1,6 +1,8 @@
 class_name GameText
 extends RefCounted
 
+const BOSS_NAME := "骸弓督军"
+
 
 static func hud_level(level: int) -> String:
 	return "等级 %d" % level
@@ -26,7 +28,7 @@ static func hud_fire_mode(module: ModuleData) -> String:
 
 
 static func hud_payload(module: ModuleData) -> String:
-	return _hud_module("弹头", module)
+	return _hud_module("枪锋", module)
 
 
 static func hud_run_time(elapsed_seconds: float) -> String:
@@ -34,7 +36,7 @@ static func hud_run_time(elapsed_seconds: float) -> String:
 
 
 static func hud_run_objective(_objective: Resource) -> String:
-	return "目标：撑到压制核心出现并击破它"
+	return "目标：撑到%s出现并击破它" % BOSS_NAME
 
 
 static func hud_next_event(elapsed_seconds: float, objective: Resource) -> String:
@@ -45,7 +47,7 @@ static func hud_next_event(elapsed_seconds: float, objective: Resource) -> Strin
 
 	var boss_event: Resource = _last_boss_event(objective)
 	if boss_event != null and elapsed_seconds >= float(boss_event.get("trigger_time")):
-		return "压制核心已出现"
+		return "%s已出现" % BOSS_NAME
 	return "目标事件已清空"
 
 
@@ -59,7 +61,68 @@ static func game_over() -> String:
 
 
 static func victory() -> String:
-	return "压制核心已击破"
+	return "%s已击破" % BOSS_NAME
+
+
+static func main_menu_title() -> String:
+	return "核心突围"
+
+
+static func main_menu_subtitle() -> String:
+	return "模块构筑幸存者"
+
+
+static func main_menu_tagline() -> String:
+	return "进入赛博测试区，移动、追逐、击退、掉落、升级。"
+
+
+static func main_menu_start() -> String:
+	return "开始行动"
+
+
+static func main_menu_quit() -> String:
+	return "退出游戏"
+
+
+static func main_menu_loadout_title() -> String:
+	return "初始配置"
+
+
+static func main_menu_mission_title() -> String:
+	return "行动目标"
+
+
+static func main_menu_mission_body() -> String:
+	return "撑到%s出现，并在敌潮中击破它。" % BOSS_NAME
+
+
+static func main_menu_controls_title() -> String:
+	return "操作"
+
+
+static func main_menu_controls_body() -> String:
+	return "WASD 移动，武器自动锁定附近敌人。"
+
+
+static func main_menu_character(character_data: Resource) -> String:
+	return "角色：%s" % _resource_display_name(character_data)
+
+
+static func main_menu_weapon(weapon_data: Resource) -> String:
+	return "武器：%s" % _resource_display_name(weapon_data)
+
+
+static func main_menu_module_pair(fire_module: ModuleData, payload_module: ModuleData) -> String:
+	return "模块：%s / %s" % [module_name(fire_module), module_name(payload_module)]
+
+
+static func main_menu_description(data: Resource) -> String:
+	if data == null:
+		return "-"
+	var description := String(data.get("description"))
+	if description.is_empty():
+		return "-"
+	return description
 
 
 static func level_up_title() -> String:
@@ -262,6 +325,15 @@ static func _hud_module(prefix: String, module: ModuleData) -> String:
 	return "%s：%s" % [prefix, module_name(module)]
 
 
+static func _resource_display_name(data: Resource) -> String:
+	if data == null:
+		return "-"
+	var display_name := String(data.get("display_name"))
+	if display_name.is_empty():
+		return "-"
+	return display_name
+
+
 static func _next_objective_event(elapsed_seconds: float, objective: Resource) -> Resource:
 	if objective == null:
 		return null
@@ -292,5 +364,5 @@ static func _objective_event_name(event: Resource) -> String:
 		0:
 			return "精英来袭"
 		1:
-			return "Boss 压制核心"
+			return "%s来袭" % BOSS_NAME
 	return "目标事件"

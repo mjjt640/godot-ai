@@ -1,7 +1,7 @@
 extends SceneTree
 
 const CollisionLayers = preload("res://scripts/config/collision_layers.gd")
-const DashEnemySkillDataScript = preload("res://resources/enemies/skills/dash_enemy_skill_data.gd")
+const ArrowEnemySkillDataScript = preload("res://resources/enemies/skills/arrow_enemy_skill_data.gd")
 const GameText = preload("res://scripts/ui/game_text.gd")
 const SanityContextScript = preload("res://scripts/dev/sanity_context.gd")
 const WorldMapChecksScript = preload("res://scripts/dev/world_map_checks.gd")
@@ -54,9 +54,11 @@ func _run() -> void:
 	_check_world_resource_grouping()
 	_check_default_map_data()
 	_check_default_map_tile_library()
+	_check_arena_tile_layers()
 	_check_game_root_scene()
 	_check_combat_feedback_resource()
 	_check_combat_feedback_readability_hooks()
+	_check_player_visual_animator_state()
 	_check_projectile_single_target_hit()
 	_check_projectile_explosion_damage_multiplier()
 	_check_projectile_world_collision_rules()
@@ -69,6 +71,7 @@ func _run() -> void:
 	_check_health_bar_ui()
 	_check_hud_run_objective_ui()
 	_check_boss_health_bar_ui()
+	_check_main_menu_ui()
 	_check_enemy_health_bar_rules()
 	_check_enemy_behavior_variants()
 	_check_base_weapon_parameters_apply_to_profile()
@@ -136,6 +139,10 @@ func _check_default_map_tile_library() -> void:
 	_world_map_checks.call("check_default_map_tile_library", _ctx())
 
 
+func _check_arena_tile_layers() -> void:
+	_world_map_checks.call("check_arena_tile_layers", _ctx())
+
+
 func _check_game_root_scene() -> void:
 	_world_map_checks.call("check_game_root_scene", _ctx())
 
@@ -150,6 +157,10 @@ func _check_combat_feedback_resource() -> void:
 
 func _check_combat_feedback_readability_hooks() -> void:
 	_enemy_combat_checks.call("check_combat_feedback_readability_hooks", _ctx())
+
+
+func _check_player_visual_animator_state() -> void:
+	_enemy_combat_checks.call("check_player_visual_animator_state", _ctx())
 
 
 func _check_xp_pickup_magnet_is_player_driven() -> void:
@@ -225,7 +236,7 @@ func _check_enemy_behavior_executor_split() -> void:
 
 
 func _check_boss_wide_body_navigation_and_state() -> void:
-	_enemy_combat_checks.call("check_boss_wide_body_navigation_and_state", _ctx(), DashEnemySkillDataScript, CollisionLayers)
+	_enemy_combat_checks.call("check_boss_wide_body_navigation_and_state", _ctx(), ArrowEnemySkillDataScript, CollisionLayers)
 
 
 func _check_health_bar_ui() -> void:
@@ -238,6 +249,10 @@ func _check_hud_run_objective_ui() -> void:
 
 func _check_boss_health_bar_ui() -> void:
 	_ui_run_profile_checks.call("check_boss_health_bar_ui", _ctx())
+
+
+func _check_main_menu_ui() -> void:
+	_ui_run_profile_checks.call("check_main_menu_ui", _ctx(), GameText)
 
 
 func _check_enemy_health_bar_rules() -> void:

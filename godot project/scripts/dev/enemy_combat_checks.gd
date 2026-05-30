@@ -91,6 +91,44 @@ func check_combat_feedback_readability_hooks(ctx) -> void:
 
 	var player_source := FileAccess.get_file_as_string("res://scripts/player/player_controller.gd")
 	ctx.expect(player_source.find("player_hit_flash_color") >= 0, "PlayerController should use player hit flash feedback")
+	ctx.expect(player_source.find("_play_hit_camera_shake") >= 0, "PlayerController should shake camera only from player hit feedback")
+	ctx.expect(player_source.find("set_move_vector") >= 0, "PlayerController should drive the player visual")
+	var player_scene_source := FileAccess.get_file_as_string("res://scenes/player/player.tscn")
+	ctx.expect(player_scene_source.find("art/characters") == -1, "Player scene should not reference removed legacy character art")
+	var reward_source := FileAccess.get_file_as_string("res://scripts/run/run_combat_reward_controller.gd")
+	ctx.expect(reward_source.find("_play_camera_shake") == -1, "Enemy death rewards should not trigger camera shake")
+	ctx.expect(reward_source.find("Camera2D") == -1, "Enemy death rewards should not depend on the player camera")
+
+
+func check_player_visual_animator_state(ctx) -> void:
+	var player = ctx.instantiate_scene("res://scenes/player/player.tscn")
+	if player == null:
+		return
+
+	ctx.root.add_child(player)
+	var visual := player.get_node_or_null("Visual") as Node2D
+	ctx.expect(visual != null, "Player scene should keep a Visual node")
+	if visual == null:
+		ctx.remove_instance(player)
+		return
+
+	ctx.expect(visual.has_method("set_move_vector"), "Player visual should expose movement-facing updates")
+
+	visual.call("set_move_vector", Vector2.ZERO)
+	if visual.has_method("_process"):
+		visual.call("_process", 0.25)
+	ctx.expect(visual.visible, "Player visual should stay visible while idle")
+	visual.call("set_move_vector", Vector2(0.01, 0.0))
+	if visual.has_method("_process"):
+		visual.call("_process", 0.25)
+	ctx.expect(visual.visible, "Player tiny input drift should keep visual valid")
+	visual.call("set_move_vector", Vector2.DOWN)
+	if visual.has_method("_process"):
+		visual.call("_process", 0.12)
+	ctx.expect(visual.visible, "Player movement should keep visual valid")
+	visual.call("set_move_vector", Vector2.ZERO)
+	ctx.expect(visual.visible, "Player visual should remain valid after movement stops")
+	ctx.remove_instance(player)
 
 
 func check_projectile_single_target_hit(ctx, damage_probe_script) -> void:
@@ -242,8 +280,10 @@ func check_enemy_obstacle_escape_navigation_hooks(ctx) -> void:
 
 func check_enemy_skill_executor_split(ctx) -> void:
 	var base_executor_path := "res://scripts/enemies/enemy_skill_executor.gd"
+	var arrow_executor_path := "res://scripts/enemies/boss_arrow_skill_executor.gd"
 	var dash_executor_path := "res://scripts/enemies/dash_skill_executor.gd"
 	ctx.expect(FileAccess.file_exists(base_executor_path), "EnemySkillExecutor base script should own the common skill executor contract")
+	ctx.expect(FileAccess.file_exists(arrow_executor_path), "BossArrowSkillExecutor should own arrow-specific boss skill behavior")
 	ctx.expect(FileAccess.file_exists(dash_executor_path), "DashSkillExecutor should own dash-specific enemy skill behavior")
 
 	var enemy_source := FileAccess.get_file_as_string("res://scripts/enemies/enemy_controller.gd")
@@ -259,6 +299,14 @@ func check_enemy_skill_executor_split(ctx) -> void:
 		ctx.expect(base_executor_source.find("func start(") >= 0, "EnemySkillExecutor should expose start")
 		ctx.expect(base_executor_source.find("func update(") >= 0, "EnemySkillExecutor should expose update")
 		ctx.expect(base_executor_source.find("func finish(") >= 0, "EnemySkillExecutor should expose finish")
+
+	if FileAccess.file_exists(arrow_executor_path):
+		var arrow_executor_source := FileAccess.get_file_as_string(arrow_executor_path)
+		ctx.expect(arrow_executor_source.find("extends \"res://scripts/enemies/enemy_skill_executor.gd\"") >= 0, "BossArrowSkillExecutor should inherit the common executor contract")
+		ctx.expect(arrow_executor_source.find("ArrowEnemySkillData") >= 0, "BossArrowSkillExecutor should own arrow skill data matching")
+		ctx.expect(arrow_executor_source.find("BossArrowShotEffect") >= 0, "BossArrowSkillExecutor should spawn arrow shot effects")
+		ctx.expect(arrow_executor_source.find("BossArrowRainEffect") >= 0, "BossArrowSkillExecutor should spawn arrow rain effects")
+		ctx.expect(arrow_executor_source.find("take_damage") == -1, "BossArrowSkillExecutor should leave hit damage to arrow effect nodes")
 
 	if FileAccess.file_exists(dash_executor_path):
 		var dash_executor_source := FileAccess.get_file_as_string(dash_executor_path)
@@ -314,42 +362,69 @@ func check_enemy_behavior_executor_split(ctx) -> void:
 		ctx.expect(touch_executor_source.find("get_touch_interval") >= 0, "TouchDamageBehaviorExecutor should own touch cooldown duration")
 
 
-func check_boss_wide_body_navigation_and_state(ctx, dash_enemy_skill_data_script, collision_layers) -> void:
+func check_boss_wide_body_navigation_and_state(ctx, arrow_enemy_skill_data_script, collision_layers) -> void:
 	var player = ctx.instantiate_scene("res://scenes/player/player.tscn")
 	var boss = ctx.instantiate_scene("res://scenes/enemies/enemy_boss_overseer.tscn")
 	if player == null or boss == null:
 		return
 
-	var dash_skill = load("res://resources/enemies/skills/boss_dash.tres")
+	var arrow_shot_skill = load("res://resources/enemies/skills/boss_arrow_shot.tres")
+	var arrow_rain_skill = load("res://resources/enemies/skills/boss_arrow_rain.tres")
 	var boss_skill_pool = load("res://resources/enemies/skill_pools/boss_overseer_skill_pool.tres")
-	ctx.expect(dash_skill != null, "Boss dash skill template should load")
+	ctx.expect(arrow_shot_skill != null, "Boss arrow shot skill template should load")
+	ctx.expect(arrow_rain_skill != null, "Boss arrow rain skill template should load")
 	ctx.expect(boss_skill_pool != null, "Boss Overseer skill pool should load")
-	if dash_skill != null:
-		ctx.expect(dash_skill.get("id") == &"boss_dash", "Boss dash skill should have a stable id")
-		ctx.expect(dash_skill.get("display_name") != "", "Boss dash skill needs a Chinese display name")
-		ctx.expect(dash_skill.get_script() == dash_enemy_skill_data_script, "Boss dash skill should use a dash-specific skill subclass")
-		ctx.expect(float(dash_skill.get("cooldown")) > 0.0, "Boss dash skill needs positive cooldown")
-		ctx.expect(float(dash_skill.get("weight")) > 0.0, "Boss dash skill needs positive common weight")
-		ctx.expect(float(dash_skill.get("windup_duration")) > 0.0, "Boss dash skill needs positive windup duration")
-		ctx.expect(float(dash_skill.get("dash_speed")) > 0.0, "Boss dash skill needs positive dash speed")
-		ctx.expect(float(dash_skill.get("dash_duration")) > 0.0, "Boss dash skill needs positive dash duration")
-		ctx.expect(float(dash_skill.get("recover_duration")) > 0.0, "Boss dash skill needs positive recover duration")
-		ctx.expect(float(dash_skill.get("damage")) > 0.0, "Boss dash skill needs positive damage")
-		ctx.expect(float(dash_skill.get("knockback")) > 0.0, "Boss dash skill needs positive knockback")
-		ctx.expect(float(dash_skill.get("warning_length")) > 0.0, "Boss dash skill needs positive warning length")
-		ctx.expect(float(dash_skill.get("warning_width")) > 0.0, "Boss dash skill needs positive warning width")
+	if arrow_shot_skill != null:
+		ctx.expect(arrow_shot_skill.get("id") == &"boss_arrow_shot", "Boss arrow shot skill should have a stable id")
+		ctx.expect(arrow_shot_skill.get("display_name") != "", "Boss arrow shot skill needs a Chinese display name")
+		ctx.expect(arrow_shot_skill.get_script() == arrow_enemy_skill_data_script, "Boss arrow shot should use an arrow-specific skill subclass")
+		ctx.expect(int(arrow_shot_skill.get("attack_mode")) == 0, "Boss arrow shot should use SHOT mode")
+		ctx.expect(float(arrow_shot_skill.get("cooldown")) > 0.0, "Boss arrow shot needs positive cooldown")
+		ctx.expect(float(arrow_shot_skill.get("weight")) > 0.0, "Boss arrow shot needs positive common weight")
+		ctx.expect(float(arrow_shot_skill.get("windup_duration")) > 0.0, "Boss arrow shot needs positive windup duration")
+		ctx.expect(float(arrow_shot_skill.get("release_duration")) > 0.0, "Boss arrow shot needs positive release duration")
+		ctx.expect(float(arrow_shot_skill.get("recover_duration")) > 0.0, "Boss arrow shot needs positive recover duration")
+		ctx.expect(float(arrow_shot_skill.get("damage")) > 0.0, "Boss arrow shot needs positive damage")
+		ctx.expect(float(arrow_shot_skill.get("knockback")) > 0.0, "Boss arrow shot needs positive knockback")
+		ctx.expect(float(arrow_shot_skill.get("warning_length")) > 0.0, "Boss arrow shot needs positive warning length")
+		ctx.expect(float(arrow_shot_skill.get("warning_width")) > 0.0, "Boss arrow shot needs positive warning width")
+		ctx.expect(float(arrow_shot_skill.get("projectile_speed")) > 0.0, "Boss arrow shot needs positive projectile speed")
+		ctx.expect(float(arrow_shot_skill.get("projectile_hit_radius")) > 0.0, "Boss arrow shot needs positive hit radius")
+	if arrow_rain_skill != null:
+		ctx.expect(arrow_rain_skill.get("id") == &"boss_arrow_rain", "Boss arrow rain skill should have a stable id")
+		ctx.expect(arrow_rain_skill.get("display_name") != "", "Boss arrow rain skill needs a Chinese display name")
+		ctx.expect(arrow_rain_skill.get_script() == arrow_enemy_skill_data_script, "Boss arrow rain should use an arrow-specific skill subclass")
+		ctx.expect(int(arrow_rain_skill.get("attack_mode")) == 1, "Boss arrow rain should use RAIN mode")
+		ctx.expect(float(arrow_rain_skill.get("cooldown")) > 0.0, "Boss arrow rain needs positive cooldown")
+		ctx.expect(float(arrow_rain_skill.get("windup_duration")) > 0.0, "Boss arrow rain needs positive windup duration")
+		ctx.expect(float(arrow_rain_skill.get("release_duration")) > 0.0, "Boss arrow rain needs positive release duration")
+		ctx.expect(float(arrow_rain_skill.get("recover_duration")) > 0.0, "Boss arrow rain needs positive recover duration")
+		ctx.expect(float(arrow_rain_skill.get("rain_radius")) > 0.0, "Boss arrow rain needs positive radius")
 	var base_skill_source := FileAccess.get_file_as_string("res://resources/enemies/enemy_skill_data.gd")
 	ctx.expect(base_skill_source.find("dash_speed") == -1, "EnemySkillData base class should not define dash-specific values")
 	ctx.expect(base_skill_source.find("warning_length") == -1, "EnemySkillData base class should not define warning-shape values")
-	var dash_skill_source := FileAccess.get_file_as_string("res://resources/enemies/skills/dash_enemy_skill_data.gd")
-	ctx.expect(dash_skill_source.find("extends \"res://resources/enemies/enemy_skill_data.gd\"") >= 0, "Dash skill data should inherit common enemy skill data")
+	ctx.expect(base_skill_source.find("rain_radius") == -1, "EnemySkillData base class should not define arrow-rain values")
+	var arrow_skill_source := FileAccess.get_file_as_string("res://resources/enemies/skills/arrow_enemy_skill_data.gd")
+	ctx.expect(arrow_skill_source.find("extends \"res://resources/enemies/enemy_skill_data.gd\"") >= 0, "Arrow skill data should inherit common enemy skill data")
 	if boss_skill_pool != null:
 		var skills: Array = boss_skill_pool.get("skills")
 		ctx.expect(not skills.is_empty(), "Boss skill pool should reserve at least one skill slot")
-		ctx.expect(skills.has(dash_skill), "Boss skill pool should include the dash skill template")
+		ctx.expect(skills.has(arrow_shot_skill), "Boss skill pool should include the arrow shot template")
+		ctx.expect(skills.has(arrow_rain_skill), "Boss skill pool should include the arrow rain template")
 	if boss.enemy_data != null:
 		var resolved_pool = boss.enemy_data.get_skill_pool()
 		ctx.expect(resolved_pool == boss_skill_pool, "Boss enemy data should resolve its independent skill pool from its template")
+		ctx.expect(boss.enemy_data.display_name == "骸弓督军", "Boss display name should match m20001 bow identity")
+
+	ctx.expect(FileAccess.file_exists("res://art/enemies/m20001/m20001.skel"), "Boss m20001 Spine skeleton should be copied into project art")
+	ctx.expect(FileAccess.file_exists("res://art/enemies/m20001/m20001.atlas"), "Boss m20001 Spine atlas should be copied into project art")
+	ctx.expect(FileAccess.file_exists("res://art/effects/boss_m20001/charged_arrow/0.png"), "Boss charged arrow sequence frame should be imported")
+	ctx.expect(FileAccess.file_exists("res://art/effects/boss_m20001/arrow_fire/0.png"), "Boss arrow impact sequence frame should be imported")
+	ctx.expect(FileAccess.file_exists("res://art/effects/boss_m20001/firerain/0.png"), "Boss arrow rain sequence frame should be imported")
+	ctx.expect(FileAccess.file_exists("res://art/effects/boss_m20001/firerain_target/0.png"), "Boss arrow rain target sequence frame should be imported")
+
+	var visual: Node = boss.get_node_or_null("Visual")
+	ctx.expect(visual != null and visual.has_method("play_attack"), "Boss scene should use a Spine visual with attack animation hooks")
 
 	var shoulder_obstacle: StaticBody2D = ctx.create_test_world_obstacle(Vector2(86.0, 40.0), Vector2(30.0, 20.0), collision_layers.WORLD)
 	var effect_container := Node2D.new()
@@ -358,6 +433,7 @@ func check_boss_wide_body_navigation_and_state(ctx, dash_enemy_skill_data_script
 	ctx.root.add_child(shoulder_obstacle)
 	ctx.root.add_child(effect_container)
 	ctx.tree.current_scene = effect_container
+	ctx.expect(boss.get_node_or_null("Visual/SpineSprite") != null, "Boss m20001 SpineSprite should load from copied skeleton")
 	player.global_position = Vector2(220.0, 0.0)
 	boss.global_position = Vector2.ZERO
 	boss.call("_reset_navigation_stuck")
@@ -369,6 +445,7 @@ func check_boss_wide_body_navigation_and_state(ctx, dash_enemy_skill_data_script
 	ctx.expect(boss.has_method("begin_boss_windup"), "Boss should expose a windup state entry for future skills")
 	ctx.expect(boss.has_method("begin_boss_dash"), "Boss should expose a dash state entry for future skills")
 	ctx.expect(boss.has_method("begin_boss_recover"), "Boss should expose a recover state entry for future skills")
+	ctx.expect(boss.has_method("face_skill_direction"), "Boss should expose skill-facing updates for bow attacks")
 	ctx.expect(boss.has_method("get_combat_state"), "Boss should expose combat state for skill tests")
 	boss.begin_boss_windup(0.2)
 	ctx.expect(int(boss.get_combat_state()) == 1, "Boss windup entry should leave chase state")
@@ -378,14 +455,27 @@ func check_boss_wide_body_navigation_and_state(ctx, dash_enemy_skill_data_script
 	ctx.expect(int(boss.get_combat_state()) == 3, "Boss recover entry should switch to recover state")
 	boss.return_to_chase()
 	ctx.expect(int(boss.get_combat_state()) == 0, "Boss should return to chase after skill states")
-	if dash_skill != null:
-		boss.call("_start_enemy_skill", dash_skill, Vector2.RIGHT)
-		ctx.expect(int(boss.get_combat_state()) == 1, "Boss skill template should start from windup")
-		ctx.expect(effect_container.get_child_count() > 0, "Boss dash skill should spawn a warning effect")
-		boss._physics_process(float(dash_skill.get("windup_duration")) + 0.05)
-		ctx.expect(int(boss.get_combat_state()) == 2, "Boss dash skill should enter dash after windup")
+	if arrow_shot_skill != null:
+		boss.call("_start_enemy_skill", arrow_shot_skill, Vector2.RIGHT)
+		ctx.expect(int(boss.get_combat_state()) == 1, "Boss arrow shot should start from windup")
+		ctx.expect(effect_container.get_child_count() > 0, "Boss arrow shot should spawn a line warning effect")
+		var shot_health: float = player.health
+		boss._physics_process(float(arrow_shot_skill.get("windup_duration")) + 0.05)
+		ctx.expect(int(boss.get_combat_state()) == 2, "Boss arrow shot should enter release after windup")
+		_process_effect_children(effect_container, 0.4)
+		ctx.expect(player.health < shot_health, "Boss arrow shot should damage the player if the warning is ignored")
 		var skill_cooldowns: Dictionary = boss.get("_skill_cooldowns")
-		ctx.expect(float(skill_cooldowns.get(dash_skill.get("id"), 0.0)) > 0.0, "Boss dash skill should set cooldown from template")
+		ctx.expect(float(skill_cooldowns.get(arrow_shot_skill.get("id"), 0.0)) > 0.0, "Boss arrow shot should set cooldown from template")
+		boss.return_to_chase()
+	if arrow_rain_skill != null:
+		boss.call("_start_enemy_skill", arrow_rain_skill, Vector2.RIGHT)
+		ctx.expect(int(boss.get_combat_state()) == 1, "Boss arrow rain should start from windup")
+		ctx.expect(effect_container.get_child_count() > 0, "Boss arrow rain should spawn a target warning effect")
+		var rain_health: float = player.health
+		boss._physics_process(float(arrow_rain_skill.get("windup_duration")) + 0.05)
+		ctx.expect(int(boss.get_combat_state()) == 2, "Boss arrow rain should enter release after windup")
+		_process_effect_children(effect_container, float(arrow_rain_skill.get("windup_duration")) + 0.05)
+		ctx.expect(player.health < rain_health, "Boss arrow rain should damage the player if they stay in the marked area")
 		boss.return_to_chase()
 
 	ctx.tree.current_scene = null
@@ -393,6 +483,14 @@ func check_boss_wide_body_navigation_and_state(ctx, dash_enemy_skill_data_script
 	ctx.remove_instance(shoulder_obstacle)
 	ctx.remove_instance(boss)
 	ctx.remove_instance(player)
+
+
+func _process_effect_children(container: Node, delta: float) -> void:
+	for child in container.get_children():
+		if child.has_method("_physics_process"):
+			child.call("_physics_process", delta)
+		if child.has_method("_process"):
+			child.call("_process", delta)
 
 
 func check_enemy_behavior_variants(ctx, enemy_behavior_pressure: int, enemy_behavior_shield: int) -> void:

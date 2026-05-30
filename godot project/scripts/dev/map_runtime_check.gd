@@ -32,8 +32,8 @@ func _run() -> void:
 		_expect(run_manager.map_data != null, "RunManager should have map_data")
 		if run_manager.map_data != null:
 			_expect(run_manager.map_data.get("id") == &"cyber_test_zone", "Runtime map should be cyber_test_zone")
-		_expect(run_manager.run_tuning.arena_half_extents == Vector2(2600.0, 1600.0), "Runtime arena should use cyber_test_zone size")
-		_expect(run_manager.run_tuning.spawn_radius == 760.0, "Runtime spawn radius should come from cyber_test_zone")
+		_expect(run_manager.run_tuning.arena_half_extents == Vector2(3800.0, 2400.0), "Runtime arena should use cyber_test_zone size")
+		_expect(run_manager.run_tuning.spawn_radius == 980.0, "Runtime spawn radius should come from cyber_test_zone")
 
 	var arena_bounds := root_node.get_node_or_null("ArenaBounds")
 	_expect(arena_bounds != null, "GameRoot should include ArenaBounds")
@@ -45,8 +45,18 @@ func _run() -> void:
 	if arena_visual != null:
 		var world_collision_layer := arena_visual.get_node_or_null("WorldCollisionLayer")
 		var hazard_area_layer := arena_visual.get_node_or_null("HazardAreaLayer")
+		var map_background := arena_visual.get_node_or_null("GroundBaseLayer/MapBackground")
+		var ground_base_layer := arena_visual.get_node_or_null("GroundBaseLayer/GeneratedBaseTiles")
+		var detail_layer := arena_visual.get_node_or_null("GroundDetailLayer/GeneratedDetailTiles")
+		var decal_layer := arena_visual.get_node_or_null("GroundDetailLayer/GeneratedDecals")
+		var neon_layer := arena_visual.get_node_or_null("NeonDetailLayer/GeneratedNeonTiles")
 		_expect(world_collision_layer != null, "ArenaVisual should include WorldCollisionLayer")
 		_expect(hazard_area_layer != null, "ArenaVisual should include HazardAreaLayer")
+		_expect(map_background == null, "Runtime map should not use the discarded generated background image")
+		_expect(ground_base_layer == null, "Runtime map should remove unsuitable open-source floor tile visuals")
+		_expect(detail_layer == null, "Runtime map should not generate old detail tile visuals")
+		_expect(decal_layer == null, "Runtime map should not generate old decal visuals")
+		_expect(neon_layer == null, "Runtime map should not generate old neon tile visuals")
 
 		var obstacle_count := 0
 		for child in _collect_descendants(world_collision_layer):
@@ -54,7 +64,16 @@ func _run() -> void:
 				obstacle_count += 1
 				_expect(child.collision_layer == CollisionLayers.WORLD, "Runtime obstacles should use WORLD layer")
 				_expect(child.collision_mask == 0, "Runtime obstacles should not scan masks")
-		_expect(obstacle_count == 10, "Runtime cyber_test_zone should create 10 simple obstacle chunks")
+				if child.name.begins_with("ArenaObstacle") or child.name.begins_with("RandomObstacle"):
+					var shape := child.get_node_or_null("CollisionShape2D") as CollisionShape2D
+					_expect(shape != null, "Runtime generated obstacles should include a collision shape")
+					if shape != null:
+						var rectangle := shape.shape as RectangleShape2D
+						_expect(rectangle != null, "Runtime generated obstacle collision should use a rectangle shape")
+						_expect(shape.position.y > 0.0, "Runtime generated obstacle collision should sit on the bottom footprint")
+						if rectangle != null:
+							_expect(rectangle.size.y < 220.0, "Runtime generated obstacle collision should not cover the full tall sprite")
+		_expect(obstacle_count == 0, "Runtime map should remove generated AI obstacle collision bodies")
 
 		var hazard_count := 0
 		for child in _collect_descendants(hazard_area_layer):
@@ -62,7 +81,7 @@ func _run() -> void:
 				hazard_count += 1
 				_expect(child.collision_layer == 0, "Runtime hazards should not block movement")
 				_expect(child.collision_mask == CollisionLayers.PLAYER, "Runtime hazards should scan player only")
-		_expect(hazard_count == 2, "Runtime cyber_test_zone should create 2 sparse hazards")
+		_expect(hazard_count == 0, "Runtime cyber_test_zone should remove old sparse hazards")
 
 	root.remove_child(root_node)
 	root_node.free()

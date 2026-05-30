@@ -55,7 +55,7 @@ func check_hud_run_objective_ui(ctx, game_text) -> void:
 
 	hud.update_run_status(181.0, objective)
 	if next_event_label != null:
-		ctx.expect(next_event_label.text.find("Boss") >= 0 or next_event_label.text.find("压制核心") >= 0, "HUD next event should keep boss pressure visible after boss spawn")
+		ctx.expect(next_event_label.text.find(game_text.BOSS_NAME) >= 0, "HUD next event should keep boss pressure visible after boss spawn")
 	ctx.remove_instance(hud)
 
 
@@ -94,6 +94,46 @@ func check_boss_health_bar_ui(ctx) -> void:
 			ctx.expect(is_equal_approx(boss_bar.value, boss.health), "Boss health bar should update from boss health signal")
 		ctx.remove_instance(boss)
 	ctx.remove_instance(hud)
+
+
+func check_main_menu_ui(ctx, game_text) -> void:
+	var menu = ctx.instantiate_scene("res://scenes/ui/main_menu.tscn")
+	if menu == null:
+		return
+
+	ctx.root.add_child(menu)
+	ctx.expect(menu.get_script() != null, "Main menu should use a controller script")
+
+	var start_button := _find_named_descendant(menu, "StartButton") as Button
+	var quit_button := _find_named_descendant(menu, "QuitButton") as Button
+	var title_label := _find_named_descendant(menu, "TitleLabel") as Label
+	var character_label := _find_named_descendant(menu, "CharacterLabel") as Label
+	var weapon_label := _find_named_descendant(menu, "WeaponLabel") as Label
+	var module_label := _find_named_descendant(menu, "ModuleLabel") as Label
+
+	ctx.expect(start_button != null, "Main menu should include a start button")
+	ctx.expect(quit_button != null, "Main menu should include a quit button")
+	ctx.expect(title_label != null and title_label.text == game_text.main_menu_title(), "Main menu title should render through GameText")
+	ctx.expect(start_button != null and start_button.text == game_text.main_menu_start(), "Main menu start button should render through GameText")
+	ctx.expect(quit_button != null and quit_button.text == game_text.main_menu_quit(), "Main menu quit button should render through GameText")
+	ctx.expect(character_label != null and character_label.text.find("角色") >= 0, "Main menu should show initial character")
+	ctx.expect(weapon_label != null and weapon_label.text.find("武器") >= 0, "Main menu should show initial weapon")
+	ctx.expect(module_label != null and module_label.text.find("模块") >= 0, "Main menu should show starting modules")
+
+	var main_menu_source := FileAccess.get_file_as_string("res://scripts/ui/main_menu_controller.gd")
+	ctx.expect(main_menu_source.find("GameText") >= 0, "main_menu_controller.gd should use GameText for player-visible text")
+	ctx.expect(ProjectSettings.get_setting("application/run/main_scene") == "res://scenes/ui/main_menu.tscn", "Project main scene should open the main menu")
+	ctx.remove_instance(menu)
+
+
+func _find_named_descendant(node: Node, node_name: String) -> Node:
+	if node.name == node_name:
+		return node
+	for child in node.get_children():
+		var found := _find_named_descendant(child, node_name)
+		if found != null:
+			return found
+	return null
 
 
 func check_enemy_health_bar_rules(ctx) -> void:
@@ -417,6 +457,7 @@ func check_script_text_boundaries(ctx) -> void:
 		"res://scripts/ui/hud_controller.gd",
 		"res://scripts/ui/level_up_panel_controller.gd",
 		"res://scripts/ui/upgrade_card.gd",
+		"res://scripts/ui/main_menu_controller.gd",
 	]:
 		var source := FileAccess.get_file_as_string(path)
 		ctx.expect(source.find("GameText") >= 0, "%s should use GameText for player-visible text" % path)

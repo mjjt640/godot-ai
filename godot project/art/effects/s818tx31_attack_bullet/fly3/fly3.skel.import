@@ -1,0 +1,14 @@
+[remap]
+
+importer="spine.skel"
+type="SpineSkeletonFileResource"
+uid="uid://cjwly8cxarv1e"
+path="res://.godot/imported/fly3.skel-c8b9d38d32bd3b86b55505bb4f9b078d.spskel"
+
+[deps]
+
+source_file="res://art/effects/s818tx31_attack_bullet/fly3/fly3.skel"
+dest_files=["res://.godot/imported/fly3.skel-c8b9d38d32bd3b86b55505bb4f9b078d.spskel"]
+
+[params]
+

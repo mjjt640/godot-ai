@@ -1,1 +1,10 @@
 tmp/
+.codegraph/
+godot project/.godot/
+__pycache__/
+*.pyc
+*.pyo
+*.tsbuildinfo
+/formats.txt
+/metadata.json
+/subtitles.txt

@@ -1,0 +1,16 @@
+[remap]
+
+importer="spine.atlas"
+type="SpineAtlasResource"
+uid="uid://c0uiqo3dmosc4"
+path="res://.godot/imported/fly5.atlas-ec63f283c91a4d0fc1fd957def7bcfb8.spatlas"
+
+[deps]
+
+source_file="res://art/effects/s818tx31_attack_bullet/fly5/fly5.atlas"
+dest_files=["res://.godot/imported/fly5.atlas-ec63f283c91a4d0fc1fd957def7bcfb8.spatlas"]
+
+[params]
+
+normal_map_prefix="n"
+specular_map_prefix="s"

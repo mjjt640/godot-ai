@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="ArrowEnemySkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/enemies/skills/arrow_enemy_skill_data.gd" id="1_skill"]
+
+[resource]
+script = ExtResource("1_skill")
+id = &"boss_arrow_shot"
+display_name = "蓄力穿骨箭"
+cooldown = 3.8
+min_range = 120.0
+max_range = 560.0
+weight = 1.0
+attack_mode = 0
+windup_duration = 0.58
+release_duration = 0.22
+recover_duration = 0.32
+damage = 24.0
+knockback = 260.0
+requires_line_of_sight = true
+warning_length = 560.0
+warning_width = 46.0
+warning_ring_width = 3.0
+warning_color = Color(0.45, 0.84, 1, 0.92)
+warning_fill_color = Color(0.12, 0.42, 1, 0.16)
+projectile_speed = 900.0
+projectile_hit_radius = 28.0
+projectile_spawn_offset = 18.0
+shot_effect_path = "res://art/effects/boss_m20001/charged_arrow"
+shot_effect_fps = 18.0
+shot_effect_scale = 0.42
+impact_effect_path = "res://art/effects/boss_m20001/arrow_fire"
+impact_effect_fps = 18.0
+impact_effect_scale = 0.52

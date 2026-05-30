@@ -1,10 +1,11 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/enemies/enemy_controller.gd" id="1_enemy"]
 [ext_resource type="Resource" path="res://resources/enemies/enemy_boss_overseer.tres" id="2_data"]
+[ext_resource type="Script" path="res://scripts/enemies/boss_spine_visual.gd" id="3_visual"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_enemy"]
-radius = 44.0
+radius = 38.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_enemy_health_bg"]
 bg_color = Color(0.05, 0.02, 0.05, 0.92)
@@ -27,9 +28,10 @@ enemy_data = ExtResource("2_data")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_enemy")
 
-[node name="Visual" type="Polygon2D" parent="."]
-color = Color(0.62, 0.18, 0.9, 1)
-polygon = PackedVector2Array(0, -54, 42, -24, 50, 24, 0, 58, -50, 24, -42, -24)
+[node name="Visual" type="Node2D" parent="."]
+script = ExtResource("3_visual")
+visual_scale = 0.68
+vertical_offset = 34.0
 
 [node name="HealthBar" type="ProgressBar" parent="."]
 visible = false
@@ -40,6 +42,6 @@ offset_bottom = -64.0
 mouse_filter = 2
 theme_override_styles/background = SubResource("StyleBoxFlat_enemy_health_bg")
 theme_override_styles/fill = SubResource("StyleBoxFlat_enemy_health_fill")
-max_value = 720.0
-value = 720.0
+max_value = 820.0
+value = 820.0
 show_percentage = false

@@ -1,7 +1,7 @@
-[gd_resource type="Resource" script_class="RunObjectiveData" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="RunObjectiveData" format=3 uid="uid://cvekjce4vri0i"]
 
-[ext_resource type="Script" path="res://resources/runs/run_objective_data.gd" id="1_objective"]
-[ext_resource type="Script" path="res://resources/runs/run_objective_event_data.gd" id="2_event"]
+[ext_resource type="Script" uid="uid://dh150cd83ibj4" path="res://resources/runs/run_objective_data.gd" id="1_objective"]
+[ext_resource type="Script" uid="uid://00ofhpigot3n" path="res://resources/runs/run_objective_event_data.gd" id="2_event"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/enemy_elite_brute.tscn" id="3_elite"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/enemy_boss_overseer.tscn" id="4_boss"]
 
@@ -9,7 +9,6 @@
 script = ExtResource("2_event")
 id = &"elite_brute_wave"
 trigger_time = 70.0
-event_type = 0
 enemy_scene = ExtResource("3_elite")
 spawn_count = 2
 
@@ -19,8 +18,7 @@ id = &"boss_overseer"
 trigger_time = 175.0
 event_type = 1
 enemy_scene = ExtResource("4_boss")
-spawn_count = 1
 
 [resource]
 script = ExtResource("1_objective")
-events = Array[Resource("res://resources/runs/run_objective_event_data.gd")]([SubResource("Resource_elite"), SubResource("Resource_boss")])
+events = Array[Resource]([SubResource("Resource_elite"), SubResource("Resource_boss")])

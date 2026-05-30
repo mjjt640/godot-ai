@@ -68,7 +68,7 @@ text = "等级 1"
 [node name="CharacterLabel" type="Label" parent="Root/StatusPanel/Panel/VBoxContainer/TopRow"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "角色：核心行者"
+text = "角色：长枪行者"
 
 [node name="HealthBox" type="VBoxContainer" parent="Root/StatusPanel/Panel/VBoxContainer/TopRow"]
 layout_mode = 2
@@ -103,7 +103,7 @@ text = "发射：单发"
 [node name="PayloadLabel" type="Label" parent="Root/StatusPanel/Panel/VBoxContainer/TopRow"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "弹头：普通弹头"
+text = "枪锋：标准枪锋"
 
 [node name="BottomRow" type="HBoxContainer" parent="Root/StatusPanel/Panel/VBoxContainer"]
 layout_mode = 2
@@ -117,7 +117,7 @@ text = "时间 00:00"
 [node name="ObjectiveLabel" type="Label" parent="Root/StatusPanel/Panel/VBoxContainer/BottomRow"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "目标：撑到压制核心出现并击破它"
+text = "目标：撑到骸弓督军出现并击破它"
 
 [node name="NextEventLabel" type="Label" parent="Root/StatusPanel/Panel/VBoxContainer/BottomRow"]
 unique_name_in_owner = true
@@ -150,7 +150,7 @@ theme_override_constants/separation = 6
 [node name="BossHealthLabel" type="Label" parent="Root/BossHealthPanel/MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "压制核心"
+text = "骸弓督军"
 horizontal_alignment = 1
 
 [node name="BossHealthBar" type="ProgressBar" parent="Root/BossHealthPanel/MarginContainer/VBoxContainer"]

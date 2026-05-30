@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="ArrowEnemySkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/enemies/skills/arrow_enemy_skill_data.gd" id="1_skill"]
+
+[resource]
+script = ExtResource("1_skill")
+id = &"boss_arrow_rain"
+display_name = "裂骨箭雨"
+cooldown = 7.2
+min_range = 150.0
+max_range = 500.0
+weight = 0.85
+attack_mode = 1
+windup_duration = 0.82
+release_duration = 0.72
+recover_duration = 0.45
+damage = 22.0
+knockback = 230.0
+requires_line_of_sight = false
+warning_length = 420.0
+warning_width = 92.0
+warning_ring_width = 4.0
+warning_color = Color(1, 0.42, 0.12, 0.92)
+warning_fill_color = Color(1, 0.14, 0.04, 0.18)
+rain_radius = 94.0
+rain_target_effect_path = "res://art/effects/boss_m20001/firerain_target"
+rain_target_effect_fps = 12.0
+rain_target_effect_scale = 1.0
+rain_effect_path = "res://art/effects/boss_m20001/firerain"
+rain_effect_fps = 18.0
+rain_effect_scale = 0.82

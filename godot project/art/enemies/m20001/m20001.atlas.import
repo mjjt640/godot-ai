@@ -1,0 +1,16 @@
+[remap]
+
+importer="spine.atlas"
+type="SpineAtlasResource"
+uid="uid://cb6yfkt4w5g5g"
+path="res://.godot/imported/m20001.atlas-716096c7cd439d10c075a28a0eefa26a.spatlas"
+
+[deps]
+
+source_file="res://art/enemies/m20001/m20001.atlas"
+dest_files=["res://.godot/imported/m20001.atlas-716096c7cd439d10c075a28a0eefa26a.spatlas"]
+
+[params]
+
+normal_map_prefix="n"
+specular_map_prefix="s"

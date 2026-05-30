@@ -1,8 +1,9 @@
-[gd_resource type="Resource" script_class="EnemySkillPoolData" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="EnemySkillPoolData" load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://resources/enemies/enemy_skill_pool_data.gd" id="1_pool"]
-[ext_resource type="Resource" path="res://resources/enemies/skills/boss_dash.tres" id="2_dash"]
+[ext_resource type="Resource" path="res://resources/enemies/skills/boss_arrow_shot.tres" id="2_arrow_shot"]
+[ext_resource type="Resource" path="res://resources/enemies/skills/boss_arrow_rain.tres" id="3_arrow_rain"]
 
 [resource]
 script = ExtResource("1_pool")
-skills = Array[Resource]([ExtResource("2_dash")])
+skills = Array[Resource]([ExtResource("2_arrow_shot"), ExtResource("3_arrow_rain")])

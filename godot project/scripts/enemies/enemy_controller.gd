@@ -3,6 +3,7 @@ extends CharacterBody2D
 
 const CollisionLayers = preload("res://scripts/config/collision_layers.gd")
 const DamageNumber = preload("res://scripts/effects/damage_number.gd")
+const BossArrowSkillExecutor = preload("res://scripts/enemies/boss_arrow_skill_executor.gd")
 const DashSkillExecutor = preload("res://scripts/enemies/dash_skill_executor.gd")
 const PressureEnemyBehaviorExecutor = preload("res://scripts/enemies/pressure_enemy_behavior_executor.gd")
 const TouchDamageBehaviorExecutor = preload("res://scripts/enemies/touch_damage_behavior_executor.gd")
@@ -48,7 +49,7 @@ func _ready() -> void:
 	add_to_group("enemies")
 	if enemy_data != null:
 		health = enemy_data.get_max_health()
-	_skill_executors = [DashSkillExecutor.new()]
+	_skill_executors = [BossArrowSkillExecutor.new(), DashSkillExecutor.new()]
 	_behavior_executors = [TouchDamageBehaviorExecutor.new(), PressureEnemyBehaviorExecutor.new()]
 	_body_probe_radius = _resolve_body_probe_radius()
 	_last_navigation_position = global_position
@@ -76,6 +77,7 @@ func _physics_process(_delta: float) -> void:
 		_update_contact_behavior_executors(delta_to_target)
 		velocity = _get_separation_velocity() + _knockback_velocity
 		move_and_slide()
+		_update_visual_motion(velocity)
 		_reset_navigation_stuck()
 		_decay_knockback(_delta)
 		return
@@ -83,6 +85,7 @@ func _physics_process(_delta: float) -> void:
 	var direction := _get_navigation_direction(delta_to_target, _delta)
 	velocity = direction * _get_move_speed() + _get_separation_velocity() + _knockback_velocity
 	move_and_slide()
+	_update_visual_motion(velocity)
 	_recover_from_slide_collisions(direction)
 	_update_navigation_stuck(_delta, direction)
 	_decay_knockback(_delta)
@@ -104,6 +107,11 @@ func _find_target() -> void:
 
 
 func _start_visual_animation() -> void:
+	if _visual == null:
+		return
+	if _visual.has_method("play_idle"):
+		_visual.call("play_idle")
+		return
 	if not _visual is AnimatedSprite2D:
 		return
 
@@ -134,6 +142,7 @@ func begin_boss_windup(duration: float) -> void:
 	if not _can_use_boss_skill_state():
 		return
 	_set_combat_state(CombatState.WINDUP, duration)
+	_play_visual_method(&"play_windup")
 
 
 func begin_boss_dash(direction: Vector2, speed: float, duration: float) -> void:
@@ -141,12 +150,15 @@ func begin_boss_dash(direction: Vector2, speed: float, duration: float) -> void:
 		return
 	_skill_motion_velocity = direction.normalized() * maxf(speed, 0.0)
 	_set_combat_state(CombatState.DASH, duration)
+	_face_visual_direction(direction)
+	_play_visual_method(&"play_attack")
 
 
 func begin_boss_recover(duration: float) -> void:
 	if not _can_use_boss_skill_state():
 		return
 	_set_combat_state(CombatState.RECOVER, duration)
+	_play_visual_method(&"play_recover")
 
 
 func return_to_chase() -> void:
@@ -155,6 +167,11 @@ func return_to_chase() -> void:
 		_active_skill_executor = null
 	_skill_motion_velocity = Vector2.ZERO
 	_set_combat_state(CombatState.CHASE, 0.0)
+	_play_visual_method(&"play_idle")
+
+
+func face_skill_direction(direction: Vector2) -> void:
+	_face_visual_direction(direction)
 
 
 func get_skill_target() -> Node2D:
@@ -167,6 +184,10 @@ func get_body_probe_radius() -> float:
 
 func get_world_clearance_for_skill(direction: Vector2, distance: float) -> float:
 	return _get_world_clearance(direction, distance)
+
+
+func get_center_world_clearance_for_skill(direction: Vector2, distance: float) -> float:
+	return _get_center_world_clearance(direction, distance)
 
 
 func get_behavior_target() -> Node2D:
@@ -592,6 +613,7 @@ func _die() -> void:
 		queue_free()
 		return
 
+	_play_visual_method(&"play_death")
 	_visual.scale = Vector2.ONE * float(combat_feedback.get("enemy_death_scale"))
 	_visual.modulate = combat_feedback.get("enemy_death_color")
 	var tween := create_tween()
@@ -606,3 +628,18 @@ func _should_show_overhead_health_bar(max_value: float) -> bool:
 	if enemy_data != null and enemy_data.get_is_elite():
 		return health > 0.0
 	return health < max_value and health > 0.0
+
+
+func _update_visual_motion(move_vector: Vector2) -> void:
+	if _visual != null and _visual.has_method("set_move_vector"):
+		_visual.call("set_move_vector", move_vector)
+
+
+func _face_visual_direction(direction: Vector2) -> void:
+	if _visual != null and _visual.has_method("face_direction"):
+		_visual.call("face_direction", direction)
+
+
+func _play_visual_method(method_name: StringName) -> void:
+	if _visual != null and _visual.has_method(method_name):
+		_visual.call(method_name)

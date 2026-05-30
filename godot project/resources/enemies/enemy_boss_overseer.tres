@@ -6,16 +6,16 @@
 [resource]
 script = ExtResource("1_enemy")
 id = &"enemy_boss_overseer"
-display_name = "压制核心"
+display_name = "骸弓督军"
 template = ExtResource("2_template")
 is_boss = true
-max_health = 720.0
-move_speed = 58.0
-touch_damage = 24.0
-touch_knockback = 180.0
-player_knockback = 280.0
-stop_distance = 58.0
-separation_radius = 110.0
-separation_strength = 220.0
-touch_interval = 0.95
-experience_reward = 30
+max_health = 820.0
+move_speed = 54.0
+touch_damage = 18.0
+touch_knockback = 150.0
+player_knockback = 230.0
+stop_distance = 172.0
+separation_radius = 116.0
+separation_strength = 210.0
+touch_interval = 1.05
+experience_reward = 36

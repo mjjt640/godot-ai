@@ -1,12 +1,7 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/enemies/enemy_controller.gd" id="1_enemy"]
 [ext_resource type="Resource" path="res://resources/enemies/enemy_shield.tres" id="2_data"]
-[ext_resource type="Texture2D" path="res://art/enemies/enemy_shield/idle_01.png" id="3_texture"]
-[ext_resource type="Script" path="res://scripts/enemies/enemy_visual_animator.gd" id="4_visual_animator"]
-[ext_resource type="Texture2D" path="res://art/enemies/enemy_shield/idle_02.png" id="5_texture"]
-[ext_resource type="Texture2D" path="res://art/enemies/enemy_shield/idle_03.png" id="6_texture"]
-[ext_resource type="Texture2D" path="res://art/enemies/enemy_shield/idle_04.png" id="7_texture"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_enemy"]
 radius = 22.0
@@ -32,10 +27,9 @@ enemy_data = ExtResource("2_data")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_enemy")
 
-[node name="Visual" type="Sprite2D" parent="."]
-texture = ExtResource("3_texture")
-script = ExtResource("4_visual_animator")
-frames = Array[Texture2D]([ExtResource("3_texture"), ExtResource("5_texture"), ExtResource("6_texture"), ExtResource("7_texture")])
+[node name="Visual" type="Polygon2D" parent="."]
+color = Color(0.78, 0.62, 0.34, 1)
+polygon = PackedVector2Array(0, -27, 24, -12, 26, 18, 0, 29, -26, 18, -24, -12)
 
 [node name="HealthBar" type="ProgressBar" parent="."]
 visible = false
